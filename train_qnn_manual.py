@@ -41,6 +41,9 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
             # Update parameters (manual implememtation)
             # Choose random 25% of parameters
             k = 0.25
+            n_params_to_upate = (params.size * k)
+            flat_indices = pnp.random.choice(params.size, n_params_to_upate, replace=False)
+            
 
             # Shift them by -pi/2 or pi/2 (to move them 1 quadrant)
             shift = pnp.pi/2
