@@ -28,6 +28,7 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
         correct_predictions = 0
         
         for image, label in tqdm(zip(x_t, y_t), total=len(x_t), desc=f"Epoch {epoch+1}/{num_epochs}", leave=False):
+                    
             # Compute forward pass with current parameters
             out = forward_pass(image, params, num_measurment_gates)
             loss = cross_entropy_loss(out, label)
@@ -37,20 +38,21 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
             pred = pnp.argmax(out)
             if pred == label:
                 correct_predictions += 1
-            
-            # Update parameters (manual implememtation)
-            # Choose random 25% of parameters
-            k = 0.25
-            n_params_to_upate = (params.size * k)
-            flat_indices = pnp.random.choice(params.size, n_params_to_upate, replace=False)
-            
 
-            # Shift them by -pi/2 or pi/2 (to move them 1 quadrant)
-            shift = pnp.pi/2
+            # Calculate gradients
+            grads = pnp.zeros_like(params)
+            for l in range(n_layers):
+                for q in range(n_qubits):
+                    for g in range(3):
+                        params_plus = params.copy()
+                        params_plus[l,q,g] += pnp.pi/2
+                        params_minus = params.copy()
+                        params_minus[l,q,g] -= pnp.pi/2
 
-            # Check loss of new shift: (if better keep it otherwise use previous)
+                        grad = (forward_pass(image, params_plus, num_measurment_gates) - forward_pass(image, params_minus, num_measurment_gates))/2
+                        grads[l,q,g] = grad
 
-        
+
         # Calculate average loss and accuracy
         avg_loss = total_loss / len(x_t)
         accuracy = correct_predictions / len(x_t)
@@ -67,8 +69,8 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
     
 # --------------------------------- Model Setup ---------------------------
 digits = [0,1]
-num_qubits = num_components = 6 # each PCA value encoded on each qubit
-num_layers = 3
+num_qubits = num_components = 4 # each PCA value encoded on each qubit
+num_layers = 2
 num_measurment_gates = math.ceil(pnp.log2(len(digits)))
 num_epochs = 40
 x,y = fetch_mnist(digits, 1000)
