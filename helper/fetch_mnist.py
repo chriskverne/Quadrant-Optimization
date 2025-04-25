@@ -2,6 +2,7 @@ import numpy as np
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.datasets import fetch_openml
+import pandas as pd
 
 def fetch_mnist(digits, num_images_per_digit):
     # Fetch MNIST dataset
@@ -48,3 +49,9 @@ def preprocess_image(x, n_components):
     x_pca_normalized = 2.0 * np.pi * (x_pca - x_pca.min(axis=0)) / (x_pca.max(axis=0) - x_pca.min(axis=0))
 
     return x_pca_normalized
+
+
+X, y = fetch_mnist([0,1,2,3], 10000)
+df = pd.DataFrame(X)
+df['label'] = y
+df.to_csv('./data/test_four_digit.csv', index=False)

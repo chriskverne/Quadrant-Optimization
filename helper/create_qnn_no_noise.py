@@ -1,7 +1,6 @@
 import pennylane as qml
 import numpy as np
 
-
 def create_qnn(n_layers, n_qubits):
     dev = qml.device('default.qubit', wires=n_qubits)
 

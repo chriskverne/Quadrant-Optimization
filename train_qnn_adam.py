@@ -3,9 +3,9 @@ import pennylane.numpy as pnp
 from pennylane.optimize import AdamOptimizer
 import math
 from tqdm import tqdm
-from fetch_mnist import fetch_mnist, preprocess_image
-from create_qnn_no_noise import create_qnn
-from cross_entropy import cross_entropy_loss
+from helper.fetch_mnist import fetch_mnist, preprocess_image
+from helper.create_qnn_no_noise import create_qnn
+from helper.cross_entropy import cross_entropy_loss
 
 def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_epochs):
     forward_pass = create_qnn(n_layers, n_qubits)
