@@ -50,7 +50,7 @@ def preprocess_image(x, n_components):
 
     return x_pca_normalized
 
-
+# 5k train, 10k test
 X, y = fetch_mnist([0,1,2,3], 10000)
 df = pd.DataFrame(X)
 df['label'] = y

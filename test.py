@@ -12,6 +12,7 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
     fp=0    
     params = two_four # 2, 4, 3
     frozen_p = pnp.zeros_like(params) # 2,4,3
+    param_history = pnp.zeros_like(params)
 
 
     for epoch in tqdm(range(num_epochs), desc="Epochs"):
@@ -53,17 +54,24 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
                         fp+=2
                         grads[l,q,g] = pnp.dot(dL_dp, grad)
 
-            # Update params:
-            params -= 0.01*grads
+            # Store gradients in param history
+            param_history = grads.copy()
+
+            # Update params which havent been frozen
+            params -= 0.01*grads*(1 - frozen_p)
 
             # Decide what to freeze / unfreeze
+            sorted_abs_history = pnp.sort(pnp.abs(param_history.flatten()))
+            idx = int(len(sorted_abs_history) * 0.80) # What we multiply here decides how much to freeze
+            threshold = sorted_abs_history[idx]
+            frozen_p = pnp.where(pnp.abs(param_history) <= threshold, 1, 0)
 
         # Calculate average loss and accuracy
         avg_loss = total_loss / len(x_t)
         accuracy = correct_predictions / len(x_t)
 
         # Print metrics for the epoch
-        print(f"Epoch {epoch+1}/{num_epochs}, Avg Loss: {avg_loss:.4f}, Accuracy: {accuracy:.2%}, No FP: {fp}")
+        print(f"\nNo FP: {fp}, Epoch {epoch+1}/{num_epochs}, Avg Loss: {avg_loss:.4f}, Accuracy: {accuracy:.2%}")
 
     return params
 
