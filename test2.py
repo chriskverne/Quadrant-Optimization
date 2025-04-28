@@ -9,9 +9,10 @@ from data.params import *
 
 def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_epochs):
     forward_pass = create_qnn(n_layers, n_qubits)
-    freeze_t = 0.8
+    freeze_t = 0.80
+    unfreeze_p = 0.10
     fp=0    
-    params = three_six
+    params = two_four
 
     # Tracks which parameters are marked as frozen
     frozen_p = pnp.zeros_like(params)
@@ -21,6 +22,9 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
 
     # Tracks number of grads for each param (to get average gradient over an epoch)
     no_grads = pnp.zeros_like(params)
+
+    # Tracks the duration each parameter has been frozen for
+    frozen_dur = pnp.zeros_like(params)
 
     for epoch in tqdm(range(num_epochs), desc="Epochs"):
         s = 50
@@ -51,6 +55,7 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
                 for q in range(n_qubits):
                     for g in range(3):
                         if frozen_p[l,q,g] == 1:
+                            frozen_dur[l,q,g] += 1
                             continue
                         
                         no_grads[l,q,g]+=1
@@ -65,22 +70,29 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
                         grads[l,q,g] = pnp.dot(dL_dp, grad)
 
             # Add gradients to param history
-            grad_history += grads.copy()
+            grad_history += grads
 
             # Update params which havent been frozen
-            params -= 0.01*grads*(1 - frozen_p)
+            params -= 0.01*grads
 
-            # Decide what to freeze & unfreeze
-            avg_grad = grad_history / no_grads
-            sorted_abs_history = pnp.sort(pnp.abs(avg_grad.flatten()))
-            idx = int(len(sorted_abs_history) * freeze_t)
-            threshold = sorted_abs_history[idx]
-            frozen_p = pnp.where(pnp.abs(avg_grad) <= threshold, 1, 0)
+        # Decide what to freeze
+        avg_grad = grad_history / no_grads
+        sorted_abs_history = pnp.sort(pnp.abs(avg_grad.flatten()))
+        idx = int(len(sorted_abs_history) * freeze_t)
+        threshold = sorted_abs_history[idx]
+        frozen_p = pnp.where(pnp.abs(avg_grad) <= threshold, 1, 0)
 
-        # reset the frozen params and grad_history after the epoch as new parameters might be better now
-        frozen_p = pnp.zeros_like(params)
-        grad_history = pnp.zeros_like(params)
-        no_grads = pnp.zeros_like(params)
+        # Decide what to unfreeze
+        frozen_indices_flat = pnp.where(frozen_p.flatten() == 1)[0]
+        frozen_durations = frozen_dur.flatten()[frozen_indices_flat]
+        num_frozen = frozen_indices_flat.size
+        num_to_unfreeze = int(pnp.ceil(unfreeze_p * num_frozen))
+        longest_frozen_relative_indices = pnp.argsort(frozen_durations)[-num_to_unfreeze:] # Get indices of top longest durations
+        indices_to_unfreeze_flat = frozen_indices_flat[longest_frozen_relative_indices]
+        multi_dim_indices_to_unfreeze = pnp.unravel_index(indices_to_unfreeze_flat, params.shape)
+        frozen_p[multi_dim_indices_to_unfreeze] = 0
+        frozen_dur[multi_dim_indices_to_unfreeze] = 0
+
 
         avg_loss = total_loss / len(x_t)
         accuracy = correct_predictions / len(x_t)
@@ -94,9 +106,9 @@ df = pd.read_csv('./data/two_digit.csv')
 x = df.drop('label', axis=1).values
 y = df['label'].values
 
-digits = [0,1,2,3]
-num_qubits = num_components = 6 # each PCA value encoded on each qubit
-num_layers = 3
+digits = [0,1]
+num_qubits = num_components = 4
+num_layers = 2
 num_measurment_gates = math.ceil(pnp.log2(len(digits)))
 num_epochs = 40
 x = preprocess_image(x, num_components)
