@@ -12,15 +12,9 @@ from helper.cross_entropy import cross_entropy_loss
 from data.params import *
 
 """
-Stochastic Gradient Post Descent
-
 Todo:
-Drop Ry in ansatz
 Restrict Rx to 0-pi range
 How much gradient varies (STD)
-
-1) Try EMA Gradients so the average is weighted more based on recent gradients
-2) Maybe reset grad_history for unfrozen parameters?? I.e. full reset for parameters frozen for a long time
 """
 
 def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_epochs):

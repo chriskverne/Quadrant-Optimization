@@ -13,21 +13,15 @@ from data.params import *
 
 """
 Stochastic Gradient Post Descent
-
 Todo:
-Drop Ry in ansatz
-Restrict Rx to 0-pi range
-How much gradient varies (STD)
-
-1) Try EMA Gradients so the average is weighted more based on recent gradients
-2) Maybe reset grad_history for unfrozen parameters?? I.e. full reset for parameters frozen for a long time
+Restrict Rx to 0-pi range, remove additional Rx in first layer
 """
 
 def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_epochs):
     forward_pass = create_qnn(n_layers, n_qubits)
     freeze_t = 0.80
     unfreeze_p = 0.10
-    beta = 0.9
+    beta = 0.8
     lr = 0.01
     fp=0    
     params = three_six_two
@@ -82,8 +76,9 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
                         fp+=2
                         grads[l,q,g] = pnp.dot(dL_dp, grad)
 
-            # Add gradients to param history
-            ema_grad = beta * ema_grad + (1 - beta) * grads
+            # Add gradients to param history (ema_grad for frozen params, formula for unfrozen)
+            potential_new_ema = beta * ema_grad + (1 - beta) * grads
+            ema_grad = pnp.where(frozen_p == 0, potential_new_ema, ema_grad)
 
             # Update params which havent been frozen
             params -= lr*grads
