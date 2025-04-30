@@ -13,8 +13,7 @@ def create_qnn(n_layers, n_qubits):
             # Rotational Gates
             for qubit in range(n_qubits):
                 qml.RX(params[layer][qubit][0], wires=qubit)
-                qml.RY(params[layer][qubit][1], wires=qubit)
-                qml.RZ(params[layer][qubit][2], wires=qubit)
+                qml.RZ(params[layer][qubit][1], wires=qubit)
 
             # Apply CNOT gates for entanglement
             for qubit in range(n_qubits):

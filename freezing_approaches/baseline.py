@@ -1,3 +1,6 @@
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import pennylane.numpy as pnp
 import math
 import pandas as pd
@@ -10,8 +13,8 @@ from data.params import *
 def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_epochs):
     forward_pass = create_qnn(n_layers, n_qubits)
     fp=0    
-    params = two_four # 2, 4, 3
-    frozen_p = pnp.zeros_like(params) # 2,4,3
+    params = three_six_two
+    frozen_p = pnp.zeros_like(params)
 
 
     for epoch in tqdm(range(num_epochs), desc="Epochs"):
@@ -41,7 +44,7 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
 
             for l in range(n_layers):
                 for q in range(n_qubits):
-                    for g in range(3):
+                    for g in range(2):
                         if frozen_p[l,q,g] == 1:
                             continue
                         params_plus = params.copy()
@@ -56,26 +59,25 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
             # Update params:
             params -= 0.01*grads
 
-            # Decide what to freeze / unfreeze
 
         # Calculate average loss and accuracy
         avg_loss = total_loss / len(x_t)
         accuracy = correct_predictions / len(x_t)
 
         # Print metrics for the epoch
-        print(f"Epoch {epoch+1}/{num_epochs}, Avg Loss: {avg_loss:.4f}, Accuracy: {accuracy:.2%}, No FP: {fp}")
+        print(f"No FP: {fp}, Epoch {epoch+1}/{num_epochs}, Avg Loss: {avg_loss:.4f}, Accuracy: {accuracy:.2%}")
 
     return params
 
     
 # --------------------------------- Model Setup ---------------------------
-df = pd.read_csv('./data/two_digit.csv')
+df = pd.read_csv('../data/two_digit.csv')
 x = df.drop('label', axis=1).values
 y = df['label'].values
 
 digits = [0,1]
-num_qubits = num_components = 4 # each PCA value encoded on each qubit
-num_layers = 2
+num_qubits = num_components = 6
+num_layers = 3
 num_measurment_gates = math.ceil(pnp.log2(len(digits)))
 num_epochs = 40
 x = preprocess_image(x, num_components)
