@@ -1,7 +1,6 @@
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 import pennylane.numpy as pnp
 import math
 import pandas as pd
@@ -11,28 +10,21 @@ from helper.create_qnn_no_noise import create_qnn
 from helper.cross_entropy import cross_entropy_loss
 from data.params import *
 
-"""
-Stochastic Gradient Post Descent
-Todo:
-Restrict Rx to 0-pi range, remove additional Rx in first layer
-"""
 
 def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_epochs):
     forward_pass = create_qnn(n_layers, n_qubits)
-    freeze_t = 0.80 # Percentage of params to freeze after each epoch
-    unfreeze_p = 0.10 # Percentage of params to unfreeze after each epoch
     beta = 0.9 # Weightage of recent grad v.s. EMA
     lr = 0.01
     fp=0    
     params = three_six
 
-    # Tracks which parameters are marked as frozen
-    frozen_p = pnp.zeros_like(params)
+    # Tracks which layers are marked as frozen
+    frozen_l = pnp.zeros_like(n_layers) # 0 = unfrozen, 1 = frozen
 
-    # Tracks the duration each parameter has been frozen for
-    frozen_dur = pnp.zeros_like(params)
+    # Tracks the duration each layer has been frozen for
+    frozen_dur = pnp.zeros_like(n_layers)
 
-    # Tracks sum of gradients for each parameter
+    # Tracks combined EMA for each layer
     ema_grad = pnp.zeros_like(params)
 
     for epoch in tqdm(range(num_epochs), desc="Epochs"):
@@ -61,12 +53,12 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
             dL_dp[label] = -1.0 / (out[label] + 1e-10)
 
             for l in range(n_layers):
+                # Skip Frozen layers
+                if frozen_l[l] == 1:
+                    frozen_dur[l] += 1
+                    continue
                 for q in range(n_qubits):
                     for g in range(2):
-                        if frozen_p[l,q,g] == 1:
-                            frozen_dur[l,q,g] += 1
-                            continue
-                        
                         params_plus = params.copy()
                         params_plus[l,q,g] += pnp.pi/2
                         params_minus = params.copy()
@@ -76,31 +68,24 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
                         fp+=2
                         grads[l,q,g] = pnp.dot(dL_dp, grad)
 
-            # Add gradients to param history (ema_grad for frozen params, formula for unfrozen)
+            # Add gradients to param history
             potential_new_ema = beta * ema_grad + (1 - beta) * grads
-            ema_grad = pnp.where(frozen_p == 0, potential_new_ema, ema_grad)
+            is_frozen_mask = (frozen_l[:, None, None] == 1)
+            ema_grad = pnp.where(is_frozen_mask, ema_grad, potential_new_ema) # ema_grad if layer is frozen, otherwise potential_new_ema
 
             # Update params which havent been frozen
             params -= lr*grads
 
         # Decide what to freeze based on smallest EMA grads
-        sorted_abs_ema = pnp.sort(pnp.abs(ema_grad.flatten()))
-        idx = int(len(sorted_abs_ema) * freeze_t)
-        threshold = sorted_abs_ema[idx]
-        frozen_p = pnp.where(pnp.abs(ema_grad) <= threshold, 1, 0)
+        avg_ema_layer = pnp.mean(pnp.abs(ema_grad), axis=(1, 2)) # [1, l] array
+        idx_to_unfreeze = pnp.argmax(avg_ema_layer)
+        frozen_l = pnp.ones(n_layers) # freeze all layers
+        frozen_l[idx_to_unfreeze] = 0 # Unfreeze layer with largest avg EMA
 
         # Decide what to unfreeze
-        frozen_indices_flat = pnp.where(frozen_p.flatten() == 1)[0]
-        frozen_durations = frozen_dur.flatten()[frozen_indices_flat]
-        num_to_unfreeze = int(pnp.ceil(unfreeze_p * frozen_indices_flat.size))
-        longest_frozen_relative_indices = pnp.argsort(frozen_durations)[-num_to_unfreeze:]
-        indices_to_unfreeze_flat = frozen_indices_flat[longest_frozen_relative_indices]
-        multi_dim_indices_to_unfreeze = pnp.unravel_index(indices_to_unfreeze_flat, ema_grad.shape) 
-
-        # Reset count / grads for unfrozen params
-        frozen_p[multi_dim_indices_to_unfreeze] = 0
-        frozen_dur[multi_dim_indices_to_unfreeze] = 0
-        ema_grad[multi_dim_indices_to_unfreeze] = 0
+        if epoch != 0 and epoch % 5 == 0:
+            frozen_l = pnp.zeros_like(n_layers)
+            frozen_dur = pnp.zeros_like(n_layers)
 
         # Prin epoch data
         avg_loss = total_loss / len(x_t)
@@ -109,13 +94,12 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
 
     return params
 
-    
 # --------------------------------- Model Setup ---------------------------
-df = pd.read_csv('../data/four_digit.csv')
+df = pd.read_csv('../data/two_digit.csv')
 x = df.drop('label', axis=1).values
 y = df['label'].values
 
-digits = [0,1,2,3]
+digits = [0,1]
 num_qubits = num_components = 6
 num_layers = 3
 num_measurment_gates = math.ceil(pnp.log2(len(digits)))
