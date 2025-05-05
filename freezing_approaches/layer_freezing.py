@@ -19,10 +19,10 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
     params = three_six
 
     # Tracks which layers are marked as frozen
-    frozen_l = pnp.zeros_like(n_layers) # 0 = unfrozen, 1 = frozen
+    frozen_l = pnp.zeros(n_layers) # 0 = unfrozen, 1 = frozen
 
     # Tracks the duration each layer has been frozen for
-    frozen_dur = pnp.zeros_like(n_layers)
+    frozen_dur = pnp.zeros(n_layers)
 
     # Tracks combined EMA for each layer
     ema_grad = pnp.zeros_like(params)
@@ -84,8 +84,8 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
 
         # Decide what to unfreeze
         if epoch != 0 and epoch % 5 == 0:
-            frozen_l = pnp.zeros_like(n_layers)
-            frozen_dur = pnp.zeros_like(n_layers)
+            frozen_l = pnp.zeros(n_layers)
+            frozen_dur = pnp.zeros(n_layers)
 
         # Prin epoch data
         avg_loss = total_loss / len(x_t)
