@@ -77,13 +77,14 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
             params -= lr*grads
 
         # Decide what to freeze based on smallest EMA grads
-        avg_ema_layer = pnp.mean(pnp.abs(ema_grad), axis=(1, 2)) # [1, l] array
+        avg_ema_layer = pnp.mean(pnp.abs(ema_grad), axis=(1, 2)) # 1, l array
         idx_to_unfreeze = pnp.argmax(avg_ema_layer)
         frozen_l = pnp.ones(n_layers) # freeze all layers
         frozen_l[idx_to_unfreeze] = 0 # Unfreeze layer with largest avg EMA
 
         # Decide what to unfreeze
         if epoch != 0 and epoch % 5 == 0:
+            print('Unfreezing all layers')
             frozen_l = pnp.zeros(n_layers)
             frozen_dur = pnp.zeros(n_layers)
 
