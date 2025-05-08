@@ -12,9 +12,7 @@ from helper.cross_entropy import cross_entropy_loss
 from data.params import *
 
 """
-Stochastic Gradient Post Descent
-Todo:
-Restrict Rx to 0-pi range, remove additional Rx in first layer
+Calculate EMA over each epoch rather than total EMA
 """
 
 def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_epochs):
