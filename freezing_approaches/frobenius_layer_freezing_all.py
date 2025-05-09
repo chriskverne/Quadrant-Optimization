@@ -10,6 +10,11 @@ from helper.create_qnn_no_noise import create_qnn
 from helper.cross_entropy import cross_entropy_loss
 from data.params import *
 
+"""
+Todo:
+Decide how many layers to freeze as a hyper parameter
+I.e. rather than unfreezing only 1 layer we can unfreeze k% of layers
+"""
 
 def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_epochs):
     forward_pass = create_qnn(n_layers, n_qubits)
@@ -68,19 +73,23 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
             # Update params which havent been frozen
             params -= lr*grads # grads will be 0 for frozen params so no need for mask
 
-        # Decide what to freeze based on Frobenius Norm every 5 epochs
-        if epoch == 5 or epoch == 13 or epoch == 23:
-            # 1) Get avg gradient over the epoch
-            epoch_grads = sum_grads / s
+        # Decide what to freeze based on Frobenius
+        # 1) Get avg gradient over the epoch
+        epoch_grads = sum_grads / s
 
-            # 2) Get Frobenius Norm of each layer
-            sums = pnp.sqrt(pnp.sum(epoch_grads**2, axis=(1,2))) # sums q and g elements (not l) (l shaped array)
-            masked_sums = pnp.where(frozen_l == 1, pnp.inf, sums) # Ignore frozen layers by setting their norm to infinity
+        # 2) Get Frobenius Norm of each layer
+        sums = pnp.sqrt(pnp.sum(epoch_grads**2, axis=(1,2))) # sums q and g elements (not l) (l shaped array)
+        masked_sums = pnp.where(frozen_l == 1, -pnp.inf, sums) # Ignore frozen layers by setting their norm to -infinity
 
-            # 3) Freeze layer with smallest Norm
-            idx = pnp.argmin(masked_sums)
-            frozen_l[idx] = 1
-            print(f"\nFroze layer {idx + 1}")
+        # 3) Freeze all layers except with largest norm
+        idx = pnp.argmax(masked_sums)
+        frozen_l = pnp.ones(n_layers)
+        frozen_l[idx] = 0
+        print(f"\nFroze all layers except Layer: {idx + 1}")
+
+        # unfreeze all layers every 5 epochs
+        if epoch != 0 and (epoch + 1)  % 5 == 0:
+            frozen_l = pnp.zeros(n_layers)
 
         # Print epoch data
         avg_loss = total_loss / len(x_t)
