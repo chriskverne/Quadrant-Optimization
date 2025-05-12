@@ -13,9 +13,7 @@ from data.params import *
 def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_epochs):
     forward_pass = create_qnn(n_layers, n_qubits)
     fp=0    
-    params = three_six_two
-    frozen_p = pnp.zeros_like(params)
-
+    params = three_six
 
     for epoch in tqdm(range(num_epochs), desc="Epochs"):
         s = 50
@@ -45,8 +43,6 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
             for l in range(n_layers):
                 for q in range(n_qubits):
                     for g in range(2):
-                        if frozen_p[l,q,g] == 1:
-                            continue
                         params_plus = params.copy()
                         params_plus[l,q,g] += pnp.pi/2
                         params_minus = params.copy()
@@ -58,7 +54,6 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
 
             # Update params:
             params -= 0.01*grads
-
 
         # Calculate average loss and accuracy
         avg_loss = total_loss / len(x_t)

@@ -10,11 +10,6 @@ from helper.create_qnn_no_noise import create_qnn
 from helper.cross_entropy import cross_entropy_loss
 from data.params import *
 
-"""
-Todo:
-Decide how many layers to freeze as a hyper parameter
-I.e. rather than unfreezing only 1 layer we can unfreeze k% of layers
-"""
 
 def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_epochs):
     forward_pass = create_qnn(n_layers, n_qubits)

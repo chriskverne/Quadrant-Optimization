@@ -16,6 +16,9 @@ Calculate EMA over each epoch rather than total EMA
 """
 
 def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_epochs):
+    hist1 = []
+    hist2 = []
+
     forward_pass = create_qnn(n_layers, n_qubits)
     freeze_t = 0.80 # Percentage of params to freeze after each epoch
     unfreeze_p = 0.10 # Percentage of params to unfreeze after each epoch
@@ -100,20 +103,22 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
         frozen_dur[multi_dim_indices_to_unfreeze] = 0
         ema_grad[multi_dim_indices_to_unfreeze] = 0
 
-        # Prin epoch data
+        # Print epoch data
         avg_loss = total_loss / len(x_t)
         accuracy = correct_predictions / len(x_t)
         print(f"\nNo FP: {fp}, Epoch {epoch+1}/{num_epochs}, Avg Loss: {avg_loss:.4f}, Accuracy: {accuracy:.2%}")
+        hist1.append(fp)
+        hist2.append(avg_loss)
 
-    return params
+    return params, hist1, hist2
 
     
 # --------------------------------- Model Setup ---------------------------
-df = pd.read_csv('../data/four_digit.csv')
+df = pd.read_csv('../data/two_digit.csv')
 x = df.drop('label', axis=1).values
 y = df['label'].values
 
-digits = [0,1,2,3]
+digits = [0,1]
 num_qubits = num_components = 6
 num_layers = 3
 num_measurment_gates = math.ceil(pnp.log2(len(digits)))
@@ -121,4 +126,4 @@ num_epochs = 40
 x = preprocess_image(x, num_components)
 
 
-train_qnn_param_shift(x, y, num_qubits, num_layers, num_measurment_gates, num_epochs)
+print(train_qnn_param_shift(x, y, num_qubits, num_layers, num_measurment_gates, num_epochs))
