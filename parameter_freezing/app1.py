@@ -1,6 +1,7 @@
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import pennylane.numpy as pnp
 import math
 import pandas as pd
@@ -11,23 +12,26 @@ from helper.cross_entropy import cross_entropy_loss
 from data.params import *
 
 """
-Maybe there is a better way than simply resetting every 5 epochs
-For example peridically train layer by layer?
+Calculate Avg Grad each epoch rather than total avg grad
 """
 
 def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_epochs):
     forward_pass = create_qnn(n_layers, n_qubits)
-    lr = 0.01
+    freeze_t = 0.80
+    unfreeze_p = 0.10
     fp=0    
     params = three_six
 
-    # Tracks which layers are marked as frozen
-    frozen_l = pnp.zeros(n_layers) # 0 = unfrozen, 1 = frozen
+    # Tracks which parameters are marked as frozen
+    frozen_p = pnp.zeros_like(params)
+
+    # Tracks the duration each parameter has been frozen for
+    frozen_dur = pnp.zeros_like(params)
+
+    # Tracks gradients to decide what to freeze
+    tt_param_grads = pnp.zeros_like(params)
 
     for epoch in tqdm(range(num_epochs), desc="Epochs"):
-        # Tracks the average gradients of each parameter for an epoch (need to divide by s to get avg)
-        sum_grads = pnp.zeros_like(params) 
-
         s = 50
         #indices = pnp.random.choice(len(x), size=s, replace=False)
         x_t = x[epoch*s:(epoch+1)*s] #x[indices]
@@ -53,11 +57,12 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
             dL_dp[label] = -1.0 / (out[label] + 1e-10)
 
             for l in range(n_layers):
-                # Skip Frozen layers
-                if frozen_l[l] == 1:
-                    continue
                 for q in range(n_qubits):
                     for g in range(2):
+                        if frozen_p[l,q,g] == 1:
+                            frozen_dur[l,q,g] += 1
+                            continue
+                        
                         params_plus = params.copy()
                         params_plus[l,q,g] += pnp.pi/2
                         params_minus = params.copy()
@@ -66,37 +71,31 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
                         grad = (forward_pass(image, params_plus, num_measurment_gates) - forward_pass(image, params_minus, num_measurment_gates))/2
                         fp+=2
                         grads[l,q,g] = pnp.dot(dL_dp, grad)
-                        sum_grads[l,q,g] += pnp.dot(dL_dp, grad)
 
+            # Add gradients to param history
+            tt_param_grads += grads # sums the total gradient over interval t
 
             # Update params which havent been frozen
-            params -= lr*grads # grads will be 0 for frozen params so no need for mask
+            params -= 0.01*grads
 
-        # Decide what to freeze based on Frobenius
-        # 1) Get avg gradient over the epoch
-        epoch_grads = sum_grads / s
+        # Decide what to freeze (i.e freeze_t% of parameters with smallest tt_param_grads)
+        sorted_abs_history = pnp.sort(pnp.abs(tt_param_grads.flatten()))
+        idx = int(len(sorted_abs_history) * freeze_t)
+        threshold = sorted_abs_history[idx]
+        frozen_p = pnp.where(pnp.abs(tt_param_grads) <= threshold, 1, 0)
 
-        # 2) Get Frobenius Norm of each layer
-        sums = pnp.sqrt(pnp.sum(epoch_grads**2, axis=(1,2))) # sums q and g elements (not l) (l shaped array)
-        masked_sums = pnp.where(frozen_l == 1, -pnp.inf, sums) # Ignore frozen layers by setting their norm to -infinity
+        # Decide what to unfreeze and set their freeze_dur to 0 (maybe not needed?)
 
-        # 3) Freeze all layers except with largest norm
-        idx = pnp.argmax(masked_sums)
-        frozen_l = pnp.ones(n_layers)
-        frozen_l[idx] = 0
-        print(f"\nFroze all layers except Layer: {idx + 1}")
+        # Reset grads for unfrozen params. I.e. a parameter isn't frozen set tt_param_grads[l,q,g] for that parameter equal to 0
+        tt_param_grads = pnp.where(frozen_p == 1, tt_param_grads, 0)
 
-        # unfreeze all layers every 5 epochs
-        if epoch != 0 and (epoch + 1)  % 5 == 0:
-            frozen_l = pnp.zeros(n_layers)
-
-        # Print epoch data
         avg_loss = total_loss / len(x_t)
         accuracy = correct_predictions / len(x_t)
         print(f"\nNo FP: {fp}, Epoch {epoch+1}/{num_epochs}, Avg Loss: {avg_loss:.4f}, Accuracy: {accuracy:.2%}")
 
     return params
 
+    
 # --------------------------------- Model Setup ---------------------------
 df = pd.read_csv('../data/two_digit.csv')
 x = df.drop('label', axis=1).values

@@ -13,6 +13,7 @@ from data.params import *
 
 """
 Calculate EMA over each epoch rather than total EMA
+Consider doing np.abs for ema rather than caring about direction
 """
 
 def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_epochs):
