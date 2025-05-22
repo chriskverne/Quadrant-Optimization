@@ -20,7 +20,7 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
     freeze_t = 0.80
     unfreeze_p = 0.10
     fp=0    
-    params = three_six
+    params = five_ten
 
     # Tracks which parameters are marked as frozen
     frozen_p = pnp.zeros_like(params)
@@ -32,7 +32,7 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
     tt_param_grads = pnp.zeros_like(params)
 
     for epoch in tqdm(range(num_epochs), desc="Epochs"):
-        s = 50
+        s = 50 # time interval representing when to freeze/unfreeze parameters
         #indices = pnp.random.choice(len(x), size=s, replace=False)
         x_t = x[epoch*s:(epoch+1)*s] #x[indices]
         y_t = y[epoch*s:(epoch+1)*s]#y[indices]
@@ -97,15 +97,15 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
 
     
 # --------------------------------- Model Setup ---------------------------
-df = pd.read_csv('../data/two_digit.csv')
+df = pd.read_csv('../data/four_digit.csv')
 x = df.drop('label', axis=1).values
 y = df['label'].values
 
-digits = [0,1]
-num_qubits = num_components = 6
-num_layers = 3
+digits = [0,1,2,3]
+num_qubits = num_components = 10
+num_layers = 5
 num_measurment_gates = math.ceil(pnp.log2(len(digits)))
-num_epochs = 40
+num_epochs = 80
 x = preprocess_image(x, num_components)
 
 

@@ -11,9 +11,17 @@ from helper.cross_entropy import cross_entropy_loss
 from data.params import *
 
 def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_epochs):
+    lr=0.001
+    beta1=0.9
+    beta2=0.999
+    epsilon=1e-8
+    
     forward_pass = create_qnn(n_layers, n_qubits)
     fp=0    
     params = three_six
+    m = pnp.zeros_like(params)  # First moment vector
+    v = pnp.zeros_like(params)  # Second moment vector
+    t = 0  # Time step counter
 
     for epoch in tqdm(range(num_epochs), desc="Epochs"):
         s = 50
@@ -24,6 +32,8 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
         correct_predictions = 0
         
         for image, label in tqdm(zip(x_t, y_t), total=len(x_t), desc=f"Epoch {epoch+1}/{num_epochs}", leave=False):
+            t+=1
+
             # Compute forward pass with current parameters
             out = forward_pass(image, params, num_measurment_gates)
             fp+=1
@@ -53,7 +63,11 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
                         grads[l,q,g] = pnp.dot(dL_dp, grad)
 
             # Update params:
-            params -= 0.01*grads
+            m = beta1 * m + (1 - beta1) * grads
+            v = beta2 * v + (1 - beta2) * (grads ** 2)
+            m_hat = m / (1 - beta1 ** t)
+            v_hat = v / (1 - beta2 ** t)
+            params = params - lr * m_hat / (pnp.sqrt(v_hat) + epsilon)
 
         # Calculate average loss and accuracy
         avg_loss = total_loss / len(x_t)
