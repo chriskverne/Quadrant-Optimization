@@ -18,6 +18,7 @@ Calculate Avg Grad each epoch rather than total avg grad
 def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_epochs):
     forward_pass = create_qnn(n_layers, n_qubits)
     freeze_t = 0.80
+    print(f"Freezing T set to {freeze_t*100}%")
     unfreeze_p = 0.10
     fp=0    
     params = five_ten
@@ -105,7 +106,7 @@ digits = [0,1,2,3]
 num_qubits = num_components = 10
 num_layers = 5
 num_measurment_gates = math.ceil(pnp.log2(len(digits)))
-num_epochs = 80
+num_epochs = 300
 x = preprocess_image(x, num_components)
 
 
