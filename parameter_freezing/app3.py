@@ -12,14 +12,14 @@ from helper.cross_entropy import cross_entropy_loss
 from data.params import *
 
 """
-Calculate Avg Grad each epoch rather than total avg grad
+Also look at the QFI when deciding what to freeze
 """
 
 def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_epochs):
     forward_pass = create_qnn(n_layers, n_qubits)
     freeze_t = 0.80
-    print(f"Probabilisitc Unfreezing, Freezing T set to {freeze_t*100}%")
-    temperature = 500
+    print(f"Freezing T set to {freeze_t*100}%")
+    unfreeze_p = 0.10
     fp=0    
     params = five_ten
 
@@ -69,7 +69,9 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
                         params_minus = params.copy()
                         params_minus[l,q,g] -= pnp.pi/2
 
-                        grad = (forward_pass(image, params_plus, num_measurment_gates) - forward_pass(image, params_minus, num_measurment_gates))/2
+                        out_plus = forward_pass(image, params_plus, num_measurment_gates)
+                        out_minus = forward_pass(image, params_minus, num_measurment_gates)
+                        grad = (out_plus - out_minus)/2
                         fp+=2
                         grads[l,q,g] = pnp.dot(dL_dp, grad)
 
@@ -84,14 +86,8 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
         idx = int(len(sorted_abs_history) * freeze_t)
         threshold = sorted_abs_history[idx]
         frozen_p = pnp.where(pnp.abs(tt_param_grads) <= threshold, 1, 0)
-        print(frozen_p)
 
-        # Probabilistic unfreezing (if frozen for 10 epochs straight, then chance of being unfrozen is 63%)
-        unfreeze_prob = 1 - pnp.exp(-frozen_dur / temperature)
-        unfreeze_mask = (pnp.random.random(params.shape) < unfreeze_prob) & (frozen_p == 1)
-        frozen_p = pnp.where(unfreeze_mask, 0, frozen_p)
-        frozen_dur = pnp.where(unfreeze_mask, 0, frozen_dur)
-        print(frozen_p)
+        # Decide what to unfreeze and set their freeze_dur to 0 (maybe not needed?)
 
         # Reset grads for unfrozen params. I.e. a parameter isn't frozen set tt_param_grads[l,q,g] for that parameter equal to 0
         tt_param_grads = pnp.where(frozen_p == 1, tt_param_grads, 0)
