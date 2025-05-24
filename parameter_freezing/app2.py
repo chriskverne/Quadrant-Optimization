@@ -12,7 +12,8 @@ from helper.cross_entropy import cross_entropy_loss
 from data.params import *
 
 """
-Calculate Avg Grad each epoch rather than total avg grad
+Probabilsitc unfreezing (maybe we can have an algorithm that decides when to unfreeze)
+For example start unfreezing more when loss doesnt drop over a period
 """
 
 def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_epochs):
