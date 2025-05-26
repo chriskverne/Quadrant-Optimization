@@ -31,7 +31,7 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
     sum_grads = pnp.zeros_like(params)
 
     freeze_t = 0.80
-    temperature = 500
+    temperature = 1000
     
     """Training Loop"""
     for time_step in tqdm(range(num_epochs), desc="Time step"):
@@ -77,7 +77,7 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
         unfreeze_probs = pnp.minimum(frozen_dur / temperature, 1) # max unfreezing 100%
         random_vals = pnp.random.random(params.shape)
         newly_unfrozen = (random_vals < unfreeze_probs)
-        print(pnp.sum(newly_unfrozen))
+        #print(pnp.sum(newly_unfrozen))
         active_p = pnp.where(newly_unfrozen, 1, active_p)
 
         # Reset sum_grads & frozen_dur for active params, keep for frozen params
