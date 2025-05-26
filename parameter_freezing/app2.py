@@ -30,18 +30,18 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
     # Tracks gradients to decide what to freeze
     sum_grads = pnp.zeros_like(params)
 
-    freeze_t = 0.90
+    freeze_t = 0.80
     temperature = 500
     
     """Training Loop"""
-    for epoch in tqdm(range(num_epochs), desc="Epochs"):
+    for time_step in tqdm(range(num_epochs), desc="Time step"):
         s = 50
-        x_t = x[epoch*s:(epoch+1)*s]
-        y_t = y[epoch*s:(epoch+1)*s]
+        x_t = x[time_step*s:(time_step+1)*s]
+        y_t = y[time_step*s:(time_step+1)*s]
         epoch_loss = 0
         correct_predictions = 0
         
-        for image, label in tqdm(zip(x_t, y_t), total=len(x_t), desc=f"Epoch {epoch+1}/{num_epochs}", leave=False):
+        for image, label in tqdm(zip(x_t, y_t), total=len(x_t), desc=f"Epoch {time_step+1}/{num_epochs}", leave=False):
             # Compute loss with current parameters
             out = forward_pass(image, params, num_measurment_gates)
             fp+=1
@@ -90,7 +90,7 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
         accuracy = correct_predictions / len(x_t)
         loss_history.append(avg_loss)
         fp_history.append(fp)
-        print(f"\nNo FP: {fp}, Epoch {epoch+1}/{num_epochs}, Avg Loss: {avg_loss:.4f}, Accuracy: {accuracy:.2%}")
+        print(f"\nNo FP: {fp}, Epoch {time_step+1}/{num_epochs}, Avg Loss: {avg_loss:.4f}, Accuracy: {accuracy:.2%}")
 
     return params, loss_history
 

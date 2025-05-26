@@ -25,12 +25,11 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
 
     # Tracks which parameters are marked as active (1) or frozen (0)
     active_p = pnp.ones_like(params)  # Initialize all as active
-    # Tracks the duration each parameter has been frozen for
-    frozen_dur = pnp.zeros_like(params)
+
     # Tracks gradients to decide what to freeze
     sum_grads = pnp.zeros_like(params)
 
-    freeze_t = 0.90
+    freeze_t = 0.80
     
     """Training Loop"""
     for epoch in tqdm(range(num_epochs), desc="Epochs"):
