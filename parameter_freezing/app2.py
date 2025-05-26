@@ -1,107 +1,98 @@
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
+import pennylane as qml
 import pennylane.numpy as pnp
+import os
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import math
-import pandas as pd
 from tqdm import tqdm
-from helper.fetch_mnist import preprocess_image
+from helper.fetch_mnist import fetch_mnist, preprocess_image
 from helper.create_qnn_no_noise import create_qnn
 from helper.cross_entropy import cross_entropy_loss
 from data.params import *
-
-"""
-Probabilsitc unfreezing (maybe we can have an algorithm that decides when to unfreeze)
-For example start unfreezing more when loss doesnt drop over a period
-"""
+import pandas as pd
 
 def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_epochs):
     forward_pass = create_qnn(n_layers, n_qubits)
-    freeze_t = 0.80
-    print(f"Probabilisitc Unfreezing, Freezing T set to {freeze_t*100}%")
-    temperature = 500
-    fp=0    
+    fp = 0
     params = five_ten
+    loss_history = []
+    fp_history = []
 
-    # Tracks which parameters are marked as frozen
-    frozen_p = pnp.zeros_like(params)
+    def cost_fn(params, image, label):
+        out = forward_pass(image, params, num_measurment_gates)
+        return cross_entropy_loss(out, label)
+    grad_fn = qml.grad(cost_fn, argnum=0)
 
+    # Tracks which parameters are marked as active (1) or frozen (0)
+    active_p = pnp.ones_like(params)  # Initialize all as active
     # Tracks the duration each parameter has been frozen for
     frozen_dur = pnp.zeros_like(params)
-
     # Tracks gradients to decide what to freeze
-    tt_param_grads = pnp.zeros_like(params)
+    sum_grads = pnp.zeros_like(params)
 
+    freeze_t = 0.90
+    temperature = 500
+    
+    """Training Loop"""
     for epoch in tqdm(range(num_epochs), desc="Epochs"):
-        s = 50 # time interval representing when to freeze/unfreeze parameters
-        #indices = pnp.random.choice(len(x), size=s, replace=False)
-        x_t = x[epoch*s:(epoch+1)*s] #x[indices]
-        y_t = y[epoch*s:(epoch+1)*s]#y[indices]
-        total_loss = 0
+        s = 50
+        x_t = x[epoch*s:(epoch+1)*s]
+        y_t = y[epoch*s:(epoch+1)*s]
+        epoch_loss = 0
         correct_predictions = 0
         
         for image, label in tqdm(zip(x_t, y_t), total=len(x_t), desc=f"Epoch {epoch+1}/{num_epochs}", leave=False):
-            # Compute forward pass with current parameters
+            # Compute loss with current parameters
             out = forward_pass(image, params, num_measurment_gates)
             fp+=1
             loss = cross_entropy_loss(out, label)
-            total_loss += loss
+            epoch_loss += loss
             
             # Check if prediction is correct
             pred = pnp.argmax(out)
             if pred == label:
                 correct_predictions += 1
 
-            # Calculate gradients
-            dL_dp = pnp.zeros_like(out)
-            grads = pnp.zeros_like(params)
-            dL_dp[label] = -1.0 / (out[label] + 1e-10)
+            # compute gradients and apply only to active params
+            gradients = grad_fn(params, image, label)
+            gradients *= active_p  # Only active params (1) keep their gradients
+            frozen_dur += (1-active_p) # add 1 to all params set to 0
 
-            for l in range(n_layers):
-                for q in range(n_qubits):
-                    for g in range(2):
-                        if frozen_p[l,q,g] == 1:
-                            frozen_dur[l,q,g] += 1
-                            continue
-                        
-                        params_plus = params.copy()
-                        params_plus[l,q,g] += pnp.pi/2
-                        params_minus = params.copy()
-                        params_minus[l,q,g] -= pnp.pi/2
+            # Add gradients to sum
+            sum_grads += gradients
 
-                        grad = (forward_pass(image, params_plus, num_measurment_gates) - forward_pass(image, params_minus, num_measurment_gates))/2
-                        fp+=2
-                        grads[l,q,g] = pnp.dot(dL_dp, grad)
+            # increase fp by 2*n_active_params
+            fp += 2*pnp.sum(active_p)  # Count active parameters (where active_p=1)
 
-            # Add gradients to param history
-            tt_param_grads += grads # sums the total gradient over interval t
-
-            # Update params which havent been frozen
-            params -= 0.01*grads
-
-        # Decide what to freeze (i.e freeze_t% of parameters with smallest tt_param_grads)
-        sorted_abs_history = pnp.sort(pnp.abs(tt_param_grads.flatten()))
+            # Update active params only
+            params -= 0.01* gradients
+        
+        # Decide what to freeze (mark as 0 for frozen, 1 for active)
+        sorted_abs_history = pnp.sort(pnp.abs(sum_grads.flatten()))
         idx = int(len(sorted_abs_history) * freeze_t)
         threshold = sorted_abs_history[idx]
-        frozen_p = pnp.where(pnp.abs(tt_param_grads) <= threshold, 1, 0)
-        print(frozen_p)
+        active_p = pnp.where(pnp.abs(sum_grads) <= threshold, 0, 1)  # Small gradients become frozen (0)
 
-        # Probabilistic unfreezing (if frozen for 10 epochs straight, then chance of being unfrozen is 63%)
-        unfreeze_prob = 1 - pnp.exp(-frozen_dur / temperature)
-        unfreeze_mask = (pnp.random.random(params.shape) < unfreeze_prob) & (frozen_p == 1)
-        frozen_p = pnp.where(unfreeze_mask, 0, frozen_p)
-        frozen_dur = pnp.where(unfreeze_mask, 0, frozen_dur)
-        print(frozen_p)
+        # Probabilistic unfreezing
+        unfreeze_probs = pnp.minimum(frozen_dur / temperature, 1) # max unfreezing 100%
+        random_vals = pnp.random.random(params.shape)
+        newly_unfrozen = (random_vals < unfreeze_probs)
+        print(pnp.sum(newly_unfrozen))
+        active_p = pnp.where(newly_unfrozen, 1, active_p)
 
-        # Reset grads for unfrozen params. I.e. a parameter isn't frozen set tt_param_grads[l,q,g] for that parameter equal to 0
-        tt_param_grads = pnp.where(frozen_p == 1, tt_param_grads, 0)
+        # Reset sum_grads & frozen_dur for active params, keep for frozen params
+        sum_grads = pnp.where(active_p == 0, sum_grads, 0) 
+        frozen_dur = pnp.where(active_p == 0, frozen_dur, 0)
 
-        avg_loss = total_loss / len(x_t)
+
+        # Calculate average loss and accuracy
+        avg_loss = epoch_loss / len(x_t)
         accuracy = correct_predictions / len(x_t)
+        loss_history.append(avg_loss)
+        fp_history.append(fp)
         print(f"\nNo FP: {fp}, Epoch {epoch+1}/{num_epochs}, Avg Loss: {avg_loss:.4f}, Accuracy: {accuracy:.2%}")
 
-    return params
+    return params, loss_history
 
     
 # --------------------------------- Model Setup ---------------------------
