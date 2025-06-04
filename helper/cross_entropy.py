@@ -11,3 +11,4 @@ def cross_entropy_grad(output_distribution, true):
     
     # Set gradient for the true class
     return -1.0 / (output_distribution[true] + epsilon)
+    
