@@ -11,8 +11,8 @@ from qiskit_algorithms.gradients import ParamShiftSamplerGradient
 from qiskit_aer import AerSimulator
 
 # Import your helper functions (we'll need to adapt these too)
-from helper.fetch_mnist import fetch_mnist, preprocess_image
-from helper.cross_entropy import cross_entropy_loss, cross_entropy_grad
+from helper.fetch_mnist import preprocess_image
+from helper.cross_entropy import cross_entropy_loss
 from data.params import *
 
 def cross_entropy_grad_softmax(softmax_probabilities, true_label_index):
@@ -110,6 +110,9 @@ def run_qc(bound_circ, shots=1000, num_meas_q=None):
 def train_qnn(n_layers, n_qubits, x, y, lr=0.01, num_meas_q=None):
     qc, input_params, weight_params = create_qnn_circuit(n_layers, n_qubits)
     params = np.random.rand(n_layers * n_qubits * 2)
+    active_p = np.ones(n_layers * n_qubits * 2)
+    sum_grads = np.zeros(n_layers * n_qubits * 2)
+    freeze_t = 0.70
     fp = 0
 
     for time_step in range(100):
@@ -131,8 +134,12 @@ def train_qnn(n_layers, n_qubits, x, y, lr=0.01, num_meas_q=None):
             loss_grad = cross_entropy_grad_softmax(out, label)
 
             # Compute N gradients with PSR
-            grads = np.zeros(n_layers*n_qubits*2)
+            grads = np.zeros(n_layers * n_qubits * 2)
             for i in range(len(params)):
+                # Skip frozen params
+                if(active_p[i] != 1):
+                    continue 
+
                 params_plus = params.copy()
                 params_plus[i] += np.pi/2
                 bound_circ = bind_circuit(qc, input_params, weight_params, image, params_plus)
@@ -148,8 +155,25 @@ def train_qnn(n_layers, n_qubits, x, y, lr=0.01, num_meas_q=None):
                 grad = (out_plus - out_minus) / 2
                 grads[i] = np.dot(grad, loss_grad)
             
+            sum_grads += grads
             params -= lr*grads # Update params with SGD
-        
+
+        # Decide what to freeze:
+        probs = np.abs(sum_grads) / np.sum(np.abs(sum_grads)) # convert to probabilities
+        n_active = int(n_layers * n_qubits * 2 * (1 - freeze_t))
+        active_indices = np.random.choice(
+            n_layers * n_qubits * 2, # how many to choose between
+            size=n_active, # how many to choose
+            replace=False, 
+            p=probs # prob of choosing each
+        )
+        new_active = np.zeros(n_layers * n_qubits * 2)
+        new_active[active_indices] = 1
+        active_p = new_active
+
+        # Reset sum_grads for active params, keep for frozen params
+        sum_grads = np.where(active_p == 0, sum_grads, 0)
+
         print(f"\nNo FP: {fp}, Epoch {time_step+1}, Avg Loss: {timestep_loss/s:.4f}, Accuracy: {correct_predictions/s:.2%}")
 
 n_layers = 2

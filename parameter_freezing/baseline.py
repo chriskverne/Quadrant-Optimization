@@ -14,7 +14,7 @@ import pandas as pd
 def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_epochs):
     forward_pass = create_qnn(n_layers, n_qubits)
     fp = 0
-    params = five_ten
+    params = pnp.random.uniform(0, 2*pnp.pi, size=(n_layers, n_qubits, 2))#five_ten
     loss_history = []
     fp_history = []
 
@@ -67,10 +67,9 @@ df = pd.read_csv('../data/two_digit.csv')
 x = df.drop('label', axis=1).values
 y = df['label'].values
 
-digits = [0,1,2,3]
 num_qubits = num_components = 4
 num_layers = 2
-num_measurment_gates = math.ceil(pnp.log2(len(digits)))
+num_measurment_gates = 1
 num_epochs = 300
 x = preprocess_image(x, num_components)
 
