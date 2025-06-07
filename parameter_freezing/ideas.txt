@@ -1,12 +1,3 @@
-# Freezing appraoches
-
-Gradient approaches:
-Average/EMA gradient over timestep
-Oscilliation (compare sign of current gradient with previosu gradient)
-Variance (compare gradients similarity over a period where more stable parameters are likely easier to train)
-
-Additional approaches:
-Importance based approaches (Identify parameter contributing the most to the loss function)
-
-Quantum approaches:
-Freeze parameters with values close to Prunable / Quantizable values 
+# SPSA Optimizer
+# QNG
+# Other Non-Gradient Optimizers
