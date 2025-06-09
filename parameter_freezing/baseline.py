@@ -14,7 +14,7 @@ import pandas as pd
 def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_epochs):
     forward_pass = create_qnn(n_layers, n_qubits)
     fp = 0
-    params = pnp.random.uniform(0, 2*pnp.pi, size=(n_layers, n_qubits, 2))#five_ten
+    params = two_four
     loss_history = []
     fp_history = []
 

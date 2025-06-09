@@ -18,13 +18,16 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
     loss_history = []
     fp_history = []
 
-    opt = qml.SPSAOptimizer(A=0.1) # qml.AdamOptimizer(stepsize=0.001, beta2=0.999)
+    opt = qml.SPSAOptimizer(A=0.1) 
 
     """Training Loop"""
     for time_step in tqdm(range(num_epochs), desc="Time step"):
         s = 50
-        x_t = x[time_step*s:(time_step+1)*s]
-        y_t = y[time_step*s:(time_step+1)*s]
+        # x_t = x[time_step*s:(time_step+1)*s]
+        # y_t = y[time_step*s:(time_step+1)*s]
+        random_indices = pnp.random.choice(len(x), size=s, replace=False)
+        x_t = x[random_indices]
+        y_t = y[random_indices]
         epoch_loss = 0
         correct_predictions = 0
         
@@ -53,11 +56,14 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
         # Calculate average loss and accuracy
         avg_loss = epoch_loss / len(x_t)
         accuracy = correct_predictions / len(x_t)
-        loss_history.append(avg_loss)
+        loss_history.append(round(float(avg_loss), 4))
         fp_history.append(fp)
         print(f"\nNo FP: {fp}, Epoch {time_step+1}/{num_epochs}, Avg Loss: {avg_loss:.4f}, Accuracy: {accuracy:.2%}")
+        if time_step != 0 and time_step % 100 == 0:
+            print(f'x = [{fp_history}]')
+            print(f'y = [{loss_history}]')
 
-    return params, loss_history
+    return params, fp_history, loss_history
 
     
 # --------------------------------- Model Setup ---------------------------
@@ -68,7 +74,7 @@ y = df['label'].values
 num_qubits = num_components = 4
 num_layers = 2
 num_measurment_gates = 1
-num_epochs = 300
+num_epochs = 1000
 x = preprocess_image(x, num_components)
 
 

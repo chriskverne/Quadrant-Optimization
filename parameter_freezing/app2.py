@@ -91,7 +91,6 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
         loss_history.append(avg_loss)
         fp_history.append(fp)
         print(f"\nNo FP: {fp}, Epoch {time_step+1}/{num_epochs}, Avg Loss: {avg_loss:.4f}, Accuracy: {accuracy:.2%}")
-
     return params, loss_history
 
     
