@@ -26,7 +26,7 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
     grad_fn = qml.grad(cost_fn, argnum=0)
 
     # Adam optimizer parameters
-    alpha = 0.001  # learning rate (default Adam value)
+    alpha = 0.01  # learning rate (default Adam value)
     beta1 = 0.9    # exponential decay rate for first moment
     beta2 = 0.999  # exponential decay rate for second moment
     epsilon = 1e-8 # small constant to prevent division by zero
@@ -90,13 +90,13 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
     return params, loss_history
     
 # --------------------------------- Model Setup ---------------------------
-df = pd.read_csv('../data/two_digit.csv')
+df = pd.read_csv('../data/four_digit.csv')
 x = df.drop('label', axis=1).values
 y = df['label'].values
 
 num_qubits = num_components = 4
 num_layers = 2
-num_measurment_gates = 1
+num_measurment_gates = 2
 num_epochs = 500
 x = preprocess_image(x, num_components)
 
