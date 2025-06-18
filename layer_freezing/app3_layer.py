@@ -24,10 +24,10 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
     grad_fn = qml.grad(cost_fn, argnum=0)
 
     # Tracks which parameters are marked as active (1) or frozen (0)
-    active_p = pnp.ones_like(params)  # Initialize all as active
+    active_l = pnp.ones(n_layers)  # Initialize all as active
 
     # Tracks gradients to decide what to freeze
-    sum_grads = pnp.zeros_like(params)
+    sum_grads = pnp.zeros(n_layers)
 
     freeze_t = 0.70
     
@@ -53,35 +53,39 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
 
             # compute gradients and apply only to active params
             gradients = grad_fn(params, image, label)
-            gradients *= active_p  # Only active params (1) keep their gradients
 
-            # Add gradients to sum
-            sum_grads += gradients
+            # Make gradients 0 for frozen layers, else add it to sum_grads
+            for l in range(n_layers):
+                if active_l[l] == 0:
+                    gradients[l] = 0
+                else:
+                    sum_grads[l] += pnp.sum(gradients[l])
 
             # increase fp by 2*n_active_params
-            fp += 2*pnp.sum(active_p)  # Count active parameters (where active_p=1)
+            fp += 2*pnp.sum(active_l)*n_qubits*2
 
             # Update active params only
             params -= 0.01* gradients
         
         # Decide what to freeze (mark as 0 for frozen, 1 for active)
-        flat_grads = pnp.abs(sum_grads.flatten())
-        flat_grads = flat_grads + 1e-10
+        flat_grads = pnp.abs(sum_grads)
+        flat_grads = flat_grads + 1e-6
         probs = flat_grads / pnp.sum(flat_grads) # convert to probabilities
-        n_active = int(len(flat_grads) * (1 - freeze_t))
+        n_active = max(1, int(n_layers * (1 - freeze_t)))
         active_indices = pnp.random.choice(
-            len(flat_grads), # how many to choose between
+            n_layers, # how many to choose between
             size=n_active, # how many to choose
             replace=False, 
             p=probs # prob of choosing each
         )
 
-        new_active_flat = pnp.zeros(len(flat_grads))
+        new_active_flat = pnp.zeros(n_layers)
         new_active_flat[active_indices] = 1 # add the randomly sampled indicies to active params
-        active_p = new_active_flat.reshape(params.shape)
+        active_l = new_active_flat
+        print(f'Active Layer: {active_l}')
 
-        # Reset sum_grads for active params, keep for frozen params
-        sum_grads = pnp.where(active_p == 0, sum_grads, 0)  # Frozen params (0) keep sum_grads, active params (1) reset to 0
+        # Reset sum_grads for active layers, keep for frozen layers
+        sum_grads = pnp.where(new_active_flat == 0, sum_grads, 0) 
 
         # Calculate average loss and accuracy
         avg_loss = epoch_loss / len(x_t)
