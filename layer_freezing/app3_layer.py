@@ -27,18 +27,18 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
     active_l = pnp.ones(n_layers)  # Initialize all as active
 
     # Tracks gradients to decide what to freeze
-    sum_grads = pnp.zeros(n_layers)
+    sum_grads = pnp.zeros_like(params)
 
-    freeze_t = 0.70
+    freeze_t = 0.80
     
     """Training Loop"""
     for epoch in tqdm(range(num_epochs), desc="Epochs"):
-        s = 100
-        x_t = x[epoch*s:(epoch+1)*s]
-        y_t = y[epoch*s:(epoch+1)*s]
+        s = 50
+        random_indices = pnp.random.choice(len(x), size=s, replace=False)
+        x_t = x[random_indices]
+        y_t = y[random_indices]
         epoch_loss = 0
         correct_predictions = 0
-        
         for image, label in tqdm(zip(x_t, y_t), total=len(x_t), desc=f"Epoch {epoch+1}/{num_epochs}", leave=False):
             # Compute loss with current parameters
             out = forward_pass(image, params, num_measurment_gates)
@@ -58,8 +58,8 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
             for l in range(n_layers):
                 if active_l[l] == 0:
                     gradients[l] = 0
-                else:
-                    sum_grads[l] += pnp.sum(gradients[l])
+
+            sum_grads += gradients
 
             # increase fp by 2*n_active_params
             fp += 2*pnp.sum(active_l)*n_qubits*2
@@ -68,9 +68,9 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
             params -= 0.01* gradients
         
         # Decide what to freeze (mark as 0 for frozen, 1 for active)
-        flat_grads = pnp.abs(sum_grads)
-        flat_grads = flat_grads + 1e-6
-        probs = flat_grads / pnp.sum(flat_grads) # convert to probabilities
+        flat_grads = pnp.array([pnp.sum(pnp.abs(sum_grads[l])) for l in range(n_layers)])
+        flat_grads += 1e-8
+        probs = flat_grads / pnp.sum(flat_grads)
         n_active = max(1, int(n_layers * (1 - freeze_t)))
         active_indices = pnp.random.choice(
             n_layers, # how many to choose between
@@ -79,13 +79,14 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
             p=probs # prob of choosing each
         )
 
-        new_active_flat = pnp.zeros(n_layers)
-        new_active_flat[active_indices] = 1 # add the randomly sampled indicies to active params
-        active_l = new_active_flat
+        active_l = pnp.zeros(n_layers)
+        active_l[active_indices] = 1
         print(f'Active Layer: {active_l}')
 
         # Reset sum_grads for active layers, keep for frozen layers
-        sum_grads = pnp.where(new_active_flat == 0, sum_grads, 0) 
+        for l in range(n_layers):
+            if active_l[l] == 1:
+                sum_grads[l] = 0
 
         # Calculate average loss and accuracy
         avg_loss = epoch_loss / len(x_t)
@@ -105,7 +106,7 @@ y = df['label'].values
 num_qubits = num_components = 10
 num_layers = 5
 num_measurment_gates = 2
-num_epochs = 500
+num_epochs = 1500
 x = preprocess_image(x, num_components)
 
 
