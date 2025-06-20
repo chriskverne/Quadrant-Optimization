@@ -66,7 +66,7 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
         
         # Decide what to freeze (mark as 0 for frozen, 1 for active)
         flat_grads = pnp.abs(sum_grads.flatten())
-        flat_grads = flat_grads + 1e-10
+        flat_grads = flat_grads + 1e-8
         probs = flat_grads / pnp.sum(flat_grads) # convert to probabilities
         n_active = int(len(flat_grads) * (1 - freeze_t))
         active_indices = pnp.random.choice(
