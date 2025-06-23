@@ -1,3 +1,0 @@
-# SPSA Optimizer
-# QNG
-# Other Non-Gradient Optimizers
