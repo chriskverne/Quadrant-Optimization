@@ -23,11 +23,11 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
     """Training Loop"""
     for time_step in tqdm(range(num_epochs), desc="Time step"):
         s = 100
-        x_t = x[time_step*s:(time_step+1)*s]
-        y_t = y[time_step*s:(time_step+1)*s]
-        # random_indices = pnp.random.choice(len(x), size=s, replace=False)
-        # x_t = x[random_indices]
-        # y_t = y[random_indices]
+        # x_t = x[time_step*s:(time_step+1)*s]
+        # y_t = y[time_step*s:(time_step+1)*s]
+        random_indices = pnp.random.choice(len(x), size=s, replace=False)
+        x_t = x[random_indices]
+        y_t = y[random_indices]
         epoch_loss = 0
         correct_predictions = 0
         

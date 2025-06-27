@@ -22,9 +22,11 @@ def train_qnn(x, y, n_qubits, n_layers, num_measurment_gates, num_epochs):
     
     for epoch in tqdm(range(num_epochs), desc="Epochs"):
         s = 100
-        random_indices = pnp.random.choice(len(x), size=s, replace=False)
-        x_batch = x[random_indices]
-        y_batch = y[random_indices]
+        #random_indices = pnp.random.choice(len(x), size=s, replace=False)
+        #x_batch = x[random_indices]
+        #y_batch = y[random_indices]
+        x_t = x[epoch*s:(epoch+1)*s]
+        y_t = y[epoch*s:(epoch+1)*s]
         
         params_flat = params.flatten()  # Flatten for optimization
         
@@ -32,12 +34,12 @@ def train_qnn(x, y, n_qubits, n_layers, num_measurment_gates, num_epochs):
             nonlocal fp_count
             p_reshaped = p.reshape(original_shape)  # Use stored shape
             total_loss = 0
-            for image, label in zip(x_batch, y_batch):
+            for image, label in zip(x_t, y_t):
                 out = forward_pass(image, p_reshaped, num_measurment_gates)
                 loss = cross_entropy_loss(out, label)
                 total_loss += loss
                 fp_count += 1
-            return total_loss / len(x_batch)
+            return total_loss / len(x_t)
         
         # Optimize for this batch
         result = minimize(
@@ -53,7 +55,7 @@ def train_qnn(x, y, n_qubits, n_layers, num_measurment_gates, num_epochs):
         # Evaluate performance
         test_loss = 0
         correct = 0
-        test_size = 50
+        test_size = 100
         test_indices = pnp.random.choice(len(x), size=test_size, replace=False)
             
         for i in test_indices:
