@@ -16,7 +16,7 @@ def create_qnn(n_layers, n_qubits):
             # Apply CNOT gates for entanglement
             for qubit in range(n_qubits):
                 next_qubit = (qubit + 1) % n_qubits
-                qml.CNOT(wires=[qubit, next_qubit])
+                qml.CZ(wires=[qubit, next_qubit])
 
         return qml.probs(wires=range(num_meas))
 

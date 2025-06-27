@@ -4,9 +4,8 @@ import pennylane.numpy as pnp
 import os
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-import math
 from tqdm import tqdm
-from helper.fetch_mnist import fetch_mnist, preprocess_image
+from helper.fetch_mnist import preprocess_image
 from helper.create_qnn_no_noise import create_qnn
 from helper.cross_entropy import cross_entropy_loss
 from data.params import *
@@ -15,14 +14,14 @@ import pandas as pd
 # Alternative approach: Mini-batch optimization with manual loop
 def train_qnn(x, y, n_qubits, n_layers, num_measurment_gates, num_epochs):
     forward_pass = create_qnn(n_layers, n_qubits)
-    params = two_four  # Keep original shape for reference
-    original_shape = params.shape  # Store the original shape
+    params = two_four #pnp.random.uniform(0, 2*pnp.pi, size=(2, 4, 2)) #two_four  
+    original_shape = params.shape 
     loss_history = []
     fp_history = []
     fp_count = 0
     
     for epoch in tqdm(range(num_epochs), desc="Epochs"):
-        s = 50
+        s = 100
         random_indices = pnp.random.choice(len(x), size=s, replace=False)
         x_batch = x[random_indices]
         y_batch = y[random_indices]
@@ -47,6 +46,7 @@ def train_qnn(x, y, n_qubits, n_layers, num_measurment_gates, num_epochs):
             method='Nelder-Mead',
             options={'maxiter': 10}  # Limit iterations per batch
         )
+
         params_flat = result.x
         params = params_flat.reshape(original_shape)  # Reshape back to original shape
         
@@ -73,13 +73,13 @@ def train_qnn(x, y, n_qubits, n_layers, num_measurment_gates, num_epochs):
     return params, fp_history, loss_history
 
 # --------------------------------- Model Setup ---------------------------
-df = pd.read_csv('../data/two_digit.csv')
+df = pd.read_csv('../data/four_digit.csv')
 x = df.drop('label', axis=1).values
 y = df['label'].values
 
 num_qubits = num_components = 4
 num_layers = 2
-num_measurment_gates = 1
+num_measurment_gates = 2
 num_epochs = 1000
 x = preprocess_image(x, num_components)
 

@@ -14,7 +14,6 @@ import pandas as pd
 def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_epochs):
     forward_pass = create_qnn(n_layers, n_qubits)
     fp = 0
-    interval = 0
     params = two_four
     loss_history = []
     fp_history = []
@@ -24,18 +23,19 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
         return cross_entropy_loss(out, label)
     grad_fn = qml.grad(cost_fn, argnum=0)
 
-    # Tracks which layers are marked as active (1) or frozen (0)
-    active_l = pnp.ones(n_layers)  # Initialize all as active
-    sum_grads = pnp.zeros_like(params) # tracks the summed gradient for each parameter during a small window
+    # Tracks which parameters are marked as active (1) or frozen (0)
+    active_p = pnp.ones_like(params)
+
+    freeze_t = 0.70
     
     """Training Loop"""
     for epoch in tqdm(range(num_epochs), desc="Epochs"):
         s = 100
-        random_indices = pnp.random.choice(len(x), size=s, replace=False)
-        x_t = x[random_indices]
-        y_t = y[random_indices]
+        x_t = x[epoch*s:(epoch+1)*s]
+        y_t = y[epoch*s:(epoch+1)*s]
         epoch_loss = 0
         correct_predictions = 0
+        
         for image, label in tqdm(zip(x_t, y_t), total=len(x_t), desc=f"Epoch {epoch+1}/{num_epochs}", leave=False):
             # Compute loss with current parameters
             out = forward_pass(image, params, num_measurment_gates)
@@ -50,35 +50,28 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
 
             # compute gradients and apply only to active params
             gradients = grad_fn(params, image, label)
-
-            # Make gradients 0 for frozen layers (parameters)
-            for l in range(n_layers):
-                if active_l[l] == 0:
-                    gradients[l] = 0
-
-            if interval >= 190000: #track gradients for 10 000 forward passes
-                sum_grads += gradients 
+            gradients *= active_p  # Only active params (1) keep their gradients
 
             # increase fp by 2*n_active_params
-            fp += 2*pnp.sum(active_l)*n_qubits*2
-            interval += 2*pnp.sum(active_l)*n_qubits*2
+            fp += 2*pnp.sum(active_p)  # Count active parameters (where active_p=1)
+
             # Update active params only
             params -= 0.01* gradients
         
-        # Decide what to freeze (mark as 0 for frozen, 1 for active)
-        lim = 10000
-        if interval >= lim:
-            avg_grad  = sum_grads / s
-            sums = pnp.sqrt(pnp.sum(avg_grad**2, axis=(1,2)))
-            sums = pnp.where(active_l == 0, pnp.inf, sums)
-            # freeze layer with smallest norm
-            idx = pnp.argmin(sums)
-            active_l[idx] = 0
-            sum_grads = pnp.zeros_like(params)
-            interval = 0
-            print(active_l)
-            lim = 1000000000000
+        # RANDOM FREEZING: Decide what to freeze with equal probabilities for all parameters
+        flat_shape = params.flatten().shape[0]
+        n_active = int(flat_shape * (1 - freeze_t))
+        
+        # Randomly select indices with equal probability (no gradient-based weighting)
+        active_indices = pnp.random.choice(
+            flat_shape,  # how many to choose between
+            size=n_active,  # how many to choose
+            replace=False  # No probability weighting - equal probability for all
+        )
 
+        new_active_flat = pnp.zeros(flat_shape)
+        new_active_flat[active_indices] = 1  # add the randomly sampled indices to active params
+        active_p = new_active_flat.reshape(params.shape)
 
         # Calculate average loss and accuracy
         avg_loss = epoch_loss / len(x_t)
@@ -98,7 +91,7 @@ y = df['label'].values
 num_qubits = num_components = 4
 num_layers = 2
 num_measurment_gates = 2
-num_epochs = 1500
+num_epochs = 500
 x = preprocess_image(x, num_components)
 
 

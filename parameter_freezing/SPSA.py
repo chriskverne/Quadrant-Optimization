@@ -22,12 +22,12 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
 
     """Training Loop"""
     for time_step in tqdm(range(num_epochs), desc="Time step"):
-        s = 50
-        # x_t = x[time_step*s:(time_step+1)*s]
-        # y_t = y[time_step*s:(time_step+1)*s]
-        random_indices = pnp.random.choice(len(x), size=s, replace=False)
-        x_t = x[random_indices]
-        y_t = y[random_indices]
+        s = 100
+        x_t = x[time_step*s:(time_step+1)*s]
+        y_t = y[time_step*s:(time_step+1)*s]
+        # random_indices = pnp.random.choice(len(x), size=s, replace=False)
+        # x_t = x[random_indices]
+        # y_t = y[random_indices]
         epoch_loss = 0
         correct_predictions = 0
         
@@ -67,13 +67,13 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
 
     
 # --------------------------------- Model Setup ---------------------------
-df = pd.read_csv('../data/two_digit.csv')
+df = pd.read_csv('../data/four_digit.csv')
 x = df.drop('label', axis=1).values
 y = df['label'].values
 
 num_qubits = num_components = 4
 num_layers = 2
-num_measurment_gates = 1
+num_measurment_gates = 2
 num_epochs = 1000
 x = preprocess_image(x, num_components)
 
