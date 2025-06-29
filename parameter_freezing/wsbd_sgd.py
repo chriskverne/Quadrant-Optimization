@@ -14,7 +14,7 @@ import pandas as pd
 def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_epochs):
     forward_pass = create_qnn(n_layers, n_qubits)
     fp = 0
-    params = two_four
+    params = three_eight
     loss_history = []
     fp_history = []
 
@@ -31,6 +31,16 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
 
     freeze_t = 0.70
     
+    """Epoch 0 eval"""
+    x_k = x[0:100]
+    y_k = y[0:100]
+    temp_loss = 0
+    for i, l in zip(x_k, y_k):
+        o = forward_pass(i, params, num_measurment_gates)
+        temp_loss += cross_entropy_loss(o, l)
+
+    print(f'Epoch 0 loss: {temp_loss/100}')
+
     """Training Loop"""
     for epoch in tqdm(range(num_epochs), desc="Epochs"):
         s = 100
@@ -98,8 +108,8 @@ df = pd.read_csv('../data/four_digit.csv')
 x = df.drop('label', axis=1).values
 y = df['label'].values
 
-num_qubits = num_components = 4
-num_layers = 2
+num_qubits = num_components = 8
+num_layers = 3
 num_measurment_gates = 2
 num_epochs = 500
 x = preprocess_image(x, num_components)
