@@ -15,7 +15,7 @@ import pandas as pd
 def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_epochs):
     forward_pass = create_qnn(n_layers, n_qubits)
     fp = 0
-    params = two_four
+    params = three_eight
     loss_history = []
     fp_history = []
 
@@ -31,7 +31,7 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
     sum_grads = pnp.zeros_like(params)
 
     # Adam optimizer parameters
-    alpha = 0.001  # learning rate (default Adam value)
+    alpha = 0.01 # 0.001  # learning rate (default Adam value)
     beta1 = 0.9    # exponential decay rate for first moment
     beta2 = 0.999  # exponential decay rate for second moment
     epsilon = 1e-8 # small constant to prevent division by zero
@@ -131,8 +131,8 @@ df = pd.read_csv('../data/four_digit.csv')
 x = df.drop('label', axis=1).values
 y = df['label'].values
 
-num_qubits = num_components = 4
-num_layers = 2
+num_qubits = num_components = 8
+num_layers = 3
 num_measurment_gates = 2
 num_epochs = 500
 x = preprocess_image(x, num_components)
