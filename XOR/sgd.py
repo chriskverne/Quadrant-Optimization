@@ -6,13 +6,13 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import math
 from tqdm import tqdm
 from helper.get_xor_data import get_xor_data
-from helper.create_qnn_xor import create_qnn
+from helper.create_qnn_xor import create_qnn_XOR
 from helper.cross_entropy import cross_entropy_loss
 from data.params import *
 import pandas as pd
 
 def train_qnn_param_shift(x, y, n_qubits, n_layers, num_epochs):
-    forward_pass = create_qnn(n_layers, n_qubits)
+    forward_pass = create_qnn_XOR(n_layers, n_qubits)
     fp = 0
     params = pnp.random.uniform(0, 2*pnp.pi, size=(n_layers, n_qubits, 2)) #five_ten
     loss_history = []

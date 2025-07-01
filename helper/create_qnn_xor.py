@@ -1,6 +1,6 @@
 import pennylane as qml
 
-def create_qnn(n_layers, n_qubits):
+def create_qnn_XOR(n_layers, n_qubits):
     dev = qml.device('default.qubit', wires=n_qubits)
 
     @qml.qnode(dev)

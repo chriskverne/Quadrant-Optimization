@@ -14,7 +14,7 @@ import pandas as pd
 # Alternative approach: Mini-batch optimization with manual loop
 def train_qnn(x, y, n_qubits, n_layers, num_measurment_gates, num_epochs):
     forward_pass = create_qnn(n_layers, n_qubits)
-    params = three_eight #pnp.random.uniform(0, 2*pnp.pi, size=(2, 4, 2)) #two_four  
+    params = five_ten #pnp.random.uniform(0, 2*pnp.pi, size=(2, 4, 2)) #two_four  
     original_shape = params.shape 
     loss_history = []
     fp_history = []
@@ -79,8 +79,8 @@ df = pd.read_csv('../data/four_digit.csv')
 x = df.drop('label', axis=1).values
 y = df['label'].values
 
-num_qubits = num_components = 8
-num_layers = 3
+num_qubits = num_components = 10
+num_layers = 5
 num_measurment_gates = 2
 num_epochs = 1000
 x = preprocess_image(x, num_components)
