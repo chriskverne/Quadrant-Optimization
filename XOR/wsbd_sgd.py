@@ -3,7 +3,6 @@ import pennylane.numpy as pnp
 import os
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-import math
 from tqdm import tqdm
 from helper.get_xor_data import get_xor_data
 from helper.create_qnn_xor import create_qnn_XOR
@@ -14,12 +13,12 @@ import pandas as pd
 def train_qnn_param_shift(x, y, n_qubits, n_layers, num_epochs):
     forward_pass = create_qnn_XOR(n_layers, n_qubits)
     fp = 0
-    params = pnp.random.uniform(0, 2*pnp.pi, size=(n_layers, n_qubits, 2)) #five_ten
+    params = three_eight
     loss_history = []
     fp_history = []
 
-    def cost_fn(params, image, label):
-        out = forward_pass(image, params)
+    def cost_fn(params, str, label):
+        out = forward_pass(str, params)
         return cross_entropy_loss(out, label)
     grad_fn = qml.grad(cost_fn, argnum=0)
 
@@ -33,15 +32,15 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_epochs):
     
     """Training Loop"""
     for time_step in tqdm(range(num_epochs), desc="Time step"):
-        s = 50
+        s = 100
         x_t = x[time_step*s:(time_step+1)*s]
         y_t = y[time_step*s:(time_step+1)*s]
         epoch_loss = 0
         correct_predictions = 0
         
-        for image, label in tqdm(zip(x_t, y_t), total=len(x_t), desc=f"Epoch {time_step+1}/{num_epochs}", leave=False):
+        for str, label in tqdm(zip(x_t, y_t), total=len(x_t), desc=f"Epoch {time_step+1}/{num_epochs}", leave=False):
             # Compute loss with current parameters
-            out = forward_pass(image, params)
+            out = forward_pass(str, params)
             fp+=1
             loss = cross_entropy_loss(out, label)
             epoch_loss += loss
@@ -52,7 +51,7 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_epochs):
                 correct_predictions += 1
 
             # compute gradients and apply only to active params
-            gradients = grad_fn(params, image, label)
+            gradients = grad_fn(params, str, label)
             gradients *= active_p  # Only active params (1) keep their gradients
 
             # Add gradients to sum
@@ -94,7 +93,7 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_epochs):
     
 # --------------------------------- Model Setup ---------------------------
 n_qubits = 8
-n_layers = 4
+n_layers = 3
 n_epochs = 400
 x,y = get_xor_data(n_qubits, 100000)
 
