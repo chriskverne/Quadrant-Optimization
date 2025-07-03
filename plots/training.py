@@ -401,18 +401,18 @@ plt.figure(figsize=(10, 6))
 # plt.xlim(0, 100000)
 
 # MNIST 10-qubit 5-layer
-plt.plot(b_adam_x8, b_adam_y8, label='ADAM', linestyle='-') # c
-plt.plot(a3_adam_x8, a3_adam_y8, label='WSBD ADAM', linestyle='-') # c
-plt.plot(sgd_x4, sgd_y4, label='SGD', linestyle='-') # c
-plt.plot(a3_x6, a3_y6, label='WSBD SGD', linestyle='-') # c
-plt.plot(no_r_x3, no_r_y3, label='SGD WSBD NO RESET', linestyle='-') # c
-plt.plot(dbd_x4, dbd_y4, label='DBD', linestyle='-') # c
-plt.plot(nm_x4, nm_y4, label='Nelder Mead', linestyle='-') # c
-plt.plot(rf_x3, rf_y3, label='Random Freeze', linestyle='-') # c
-plt.plot(spsa_x4[::5], spsa_y4[::5], label='SPSA', linestyle='-') # c
-plt.plot(wsbd_l_x3, wsbd_l_y3, label='L-WSBD', linestyle='-') # c
-plt.plot(bay_x3, bay_y3, label='Bayesian', linestyle='-') # c
-plt.xlim(0, 300000)
+# plt.plot(b_adam_x8, b_adam_y8, label='ADAM', linestyle='-') # c
+# plt.plot(a3_adam_x8, a3_adam_y8, label='WSBD ADAM', linestyle='-') # c
+# plt.plot(sgd_x4, sgd_y4, label='SGD', linestyle='-') # c
+# plt.plot(a3_x6, a3_y6, label='WSBD SGD', linestyle='-') # c
+# plt.plot(no_r_x3, no_r_y3, label='SGD WSBD NO RESET', linestyle='-') # c
+# plt.plot(dbd_x4, dbd_y4, label='DBD', linestyle='-') # c
+# plt.plot(nm_x4, nm_y4, label='Nelder Mead', linestyle='-') # c
+# plt.plot(rf_x3, rf_y3, label='Random Freeze', linestyle='-') # c
+# plt.plot(spsa_x4[::5], spsa_y4[::5], label='SPSA', linestyle='-') # c
+# plt.plot(wsbd_l_x3, wsbd_l_y3, label='L-WSBD', linestyle='-') # c
+# plt.plot(bay_x3, bay_y3, label='Bayesian', linestyle='-') # c
+# plt.xlim(0, 300000)
 
 plt.title('Loss Decrease Over Forward Passes')
 plt.xlabel('Number of Forward Passes')
