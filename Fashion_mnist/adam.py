@@ -4,32 +4,28 @@ import os
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from tqdm import tqdm
-from helper.create_qnn_xor import create_qnn_XOR
+from helper.fetch_fashion import fetch_mnist, preprocess_image
+from helper.create_qnn_fashion import create_qnn
 from helper.cross_entropy import cross_entropy_loss
-from helper.mse_loss import mse_loss
-from helper.get_xor_data import get_xor_data
 from data.params import *
+import pandas as pd
 
 
-def train_qnn_param_shift(x, y, n_qubits, n_layers, num_epochs):
-    forward_pass = create_qnn_XOR(n_layers, n_qubits)
+def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_epochs):
+    forward_pass = create_qnn(n_layers, n_qubits)
     fp = 0
-    params = two_four
+    params = three_eight
     loss_history = []
     fp_history = []
 
-    # def cost_fn(params, image, label):
-    #     out = forward_pass(image, params)
-    #     return cross_entropy_loss(out, label)
-
     def cost_fn(params, image, label):
-        out = forward_pass(image, params)[label]
-        return mse_loss(out, label)
+        out = forward_pass(image, params, num_measurment_gates)
+        return cross_entropy_loss(out, label)
     
     grad_fn = qml.grad(cost_fn, argnum=0)
 
     # Adam optimizer parameters
-    alpha = 0.01  # learning rate (default Adam value)
+    alpha = 0.01 #0.001  # learning rate (default Adam value)
     beta1 = 0.9    # exponential decay rate for first moment
     beta2 = 0.999  # exponential decay rate for second moment
     epsilon = 1e-8 # small constant to prevent division by zero
@@ -47,23 +43,23 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_epochs):
         epoch_loss = 0
         correct_predictions = 0
                 
-        for str,bit in tqdm(zip(x_t, y_t), total=len(x_t), desc=f"Epoch {epoch+1}/{num_epochs}", leave=False):
+        for image, label in tqdm(zip(x_t, y_t), total=len(x_t), desc=f"Epoch {epoch+1}/{num_epochs}", leave=False):
             # Increment time step for Adam
             t += 1
             
             # Compute loss with current parameters
-            out = forward_pass(str, params)[bit]
+            out = forward_pass(image, params, num_measurment_gates)
             fp += 1
-            loss = mse_loss(out, bit)
+            loss = cross_entropy_loss(out, label)
             epoch_loss += loss
             
             # Check if prediction is correct
-            pred = pnp.sign(out)
-            if pred == bit:
+            pred = pnp.argmax(out)
+            if pred == label:
                 correct_predictions += 1
 
             # compute gradients and apply only to active params
-            gradients = grad_fn(params, str, bit)
+            gradients = grad_fn(params, image, label)
 
             # increase fp by 2*n_active_params
             fp += 2*params.size
@@ -88,14 +84,19 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_epochs):
         accuracy = correct_predictions / len(x_t)
         loss_history.append(avg_loss)
         fp_history.append(fp)
-        print(f"\nNo FP: {fp}, Epoch {epoch+1}/{num_epochs}, Avg Loss: {avg_loss[0]:.4f}, Accuracy: {accuracy:.2%}")
+        print(f"\nNo FP: {fp}, Epoch {epoch+1}/{num_epochs}, Avg Loss: {avg_loss:.4f}, Accuracy: {accuracy:.2%}")
 
     return params, loss_history
     
 # --------------------------------- Model Setup ---------------------------
-n_qubits = 4
-n_layers = 2
-n_epochs = 100
-x,y = get_xor_data(n_qubits, 100000)
+df = pd.read_csv('../data/eight_fashion.csv')
+x = df.drop('label', axis=1).values
+y = df['label'].values
 
-train_qnn_param_shift(x, y, n_qubits, n_layers, n_epochs)
+num_qubits = num_components = 8
+num_layers = 3
+num_measurment_gates = 3
+num_epochs = 500
+x = preprocess_image(x, num_components)
+
+train_qnn_param_shift(x, y, num_qubits, num_layers, num_measurment_gates, num_epochs)
