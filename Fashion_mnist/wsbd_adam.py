@@ -15,7 +15,7 @@ import pandas as pd
 def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_epochs):
     forward_pass = create_qnn(n_layers, n_qubits)
     fp = 0
-    params = three_eight
+    params = five_ten
     loss_history = []
     fp_history = []
 
@@ -77,22 +77,16 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
             fp += 2*pnp.sum(active_p)  # Count active parameters (where active_p=1)
 
             # Adam optimizer update (only for active parameters)
-            # Update biased first moment estimate
             m = beta1 * m + (1 - beta1) * gradients
-            
-            # Update biased second raw moment estimate
             v = beta2 * v + (1 - beta2) * (gradients ** 2)
-            
-            # Compute bias-corrected first moment estimate
             m_hat = m / (1 - beta1 ** t)
-            
-            # Compute bias-corrected second raw moment estimate
             v_hat = v / (1 - beta2 ** t)
             
             # Update parameters using Adam formula (only active params)
             adam_update = alpha * m_hat / (pnp.sqrt(v_hat) + epsilon)
             adam_update *= active_p  # Only update active parameters
-            params -= adam_update
+            params = params - adam_update
+
         
         # Decide what to freeze (mark as 0 for frozen, 1 for active)
         flat_grads = pnp.abs(sum_grads.flatten())
@@ -131,8 +125,8 @@ df = pd.read_csv('../data/eight_fashion.csv')
 x = df.drop('label', axis=1).values
 y = df['label'].values
 
-num_qubits = num_components = 8
-num_layers = 3
+num_qubits = num_components = 10
+num_layers = 5
 num_measurment_gates = 3
 num_epochs = 500
 x = preprocess_image(x, num_components)

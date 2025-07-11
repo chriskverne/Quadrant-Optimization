@@ -1,6 +1,6 @@
 import pennylane as qml
 import pennylane.numpy as pnp
-from functools import reduce # Optional, for a more compact way
+#from functools import reduce # Optional, for a more compact way
 
 
 def create_qnn_XOR(n_layers, n_qubits):

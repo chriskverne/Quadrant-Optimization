@@ -13,7 +13,7 @@ from data.params import *
 def train_qnn_param_shift(x, y, n_qubits, n_layers, num_epochs):
     forward_pass = create_qnn_XOR(n_layers, n_qubits)
     fp = 0
-    params = five_ten
+    params = two_four
     loss_history = []
     fp_history = []
 
@@ -37,7 +37,8 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_epochs):
     # Adam optimizer state variables
     m = pnp.zeros_like(params)  # first moment (mean of gradients)
     v = pnp.zeros_like(params)  # second moment (variance of gradients)
-    t = 0  # time step counter
+    #t = 0  # time step counter
+    t_per_param = pnp.zeros_like(params)
 
     freeze_t = 0.70
     
@@ -51,7 +52,7 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_epochs):
         
         for str, label in tqdm(zip(x_t, y_t), total=len(x_t), desc=f"Epoch {epoch+1}/{num_epochs}", leave=False):
             # Increment time step for Adam
-            t += 1
+            #t += 1
             
             # Compute loss with current parameters
             out = forward_pass(str, params)
@@ -71,21 +72,17 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_epochs):
             # Add gradients to sum
             sum_grads += gradients
 
+            t_per_param += active_p
+
             # increase fp by 2*n_active_params
             fp += 2*pnp.sum(active_p)  # Count active parameters (where active_p=1)
 
             # Adam optimizer update (only for active parameters)
             # Update biased first moment estimate
-            m = beta1 * m + (1 - beta1) * gradients
-            
-            # Update biased second raw moment estimate
+            m = beta1 * m  + (1 - beta1) * gradients
             v = beta2 * v + (1 - beta2) * (gradients ** 2)
-            
-            # Compute bias-corrected first moment estimate
-            m_hat = m / (1 - beta1 ** t)
-            
-            # Compute bias-corrected second raw moment estimate
-            v_hat = v / (1 - beta2 ** t)
+            m_hat = m / (1 - beta1 ** t_per_param)
+            v_hat = v / (1 - beta2 ** t_per_param)
             
             # Update parameters using Adam formula (only active params)
             adam_update = alpha * m_hat / (pnp.sqrt(v_hat) + epsilon)
@@ -126,8 +123,8 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_epochs):
     
 # --------------------------------- Model Setup ---------------------------
 
-n_qubits = 10
-n_layers = 5
+n_qubits = 4
+n_layers = 2
 n_epochs = 400
 x,y = get_xor_data(n_qubits, 100000)
 

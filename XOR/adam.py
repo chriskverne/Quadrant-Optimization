@@ -6,7 +6,6 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from tqdm import tqdm
 from helper.create_qnn_xor import create_qnn_XOR
 from helper.cross_entropy import cross_entropy_loss
-from helper.mse_loss import mse_loss
 from helper.get_xor_data import get_xor_data
 from data.params import *
 
@@ -18,13 +17,9 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_epochs):
     loss_history = []
     fp_history = []
 
-    # def cost_fn(params, image, label):
-    #     out = forward_pass(image, params)
-    #     return cross_entropy_loss(out, label)
-
     def cost_fn(params, image, label):
-        out = forward_pass(image, params)[label]
-        return mse_loss(out, label)
+        out = forward_pass(image, params)
+        return cross_entropy_loss(out, label)
     
     grad_fn = qml.grad(cost_fn, argnum=0)
 
@@ -52,13 +47,13 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_epochs):
             t += 1
             
             # Compute loss with current parameters
-            out = forward_pass(str, params)[bit]
+            out = forward_pass(str, params)
             fp += 1
-            loss = mse_loss(out, bit)
+            loss = cross_entropy_loss(out, bit)
             epoch_loss += loss
             
             # Check if prediction is correct
-            pred = pnp.sign(out)
+            pred = pnp.argmax(out)
             if pred == bit:
                 correct_predictions += 1
 
@@ -69,14 +64,9 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_epochs):
             fp += 2*params.size
 
             # Adam optimizer update
-            # Update biased first moment estimate
-            m = beta1 * m + (1 - beta1) * gradients
-            # Update biased second raw moment estimate
+            m = beta1 * m * + (1 - beta1) * gradients
             v = beta2 * v + (1 - beta2) * (gradients ** 2)
-            
-            # Compute bias-corrected first moment estimate
             m_hat = m / (1 - beta1 ** t)
-            # Compute bias-corrected second raw moment estimate
             v_hat = v / (1 - beta2 ** t)
             
             # Update parameters using Adam formula
