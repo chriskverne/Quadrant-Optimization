@@ -13,7 +13,7 @@ from data.params import *
 # Alternative approach: Mini-batch optimization with Bayesian optimization
 def train_qnn(x, y, n_qubits, n_layers, num_epochs):
     forward_pass = create_qnn_XOR(n_layers, n_qubits)
-    params = three_eight
+    params = five_ten
     original_shape = params.shape 
     loss_history = []
     fp_history = []
@@ -84,8 +84,8 @@ def train_qnn(x, y, n_qubits, n_layers, num_epochs):
     return params, fp_history, loss_history
 
 # --------------------------------- Model Setup ---------------------------
-n_qubits = 8
-n_layers = 3
+n_qubits = 10
+n_layers = 5
 n_epochs = 400
 x,y = get_xor_data(n_qubits, 100000)
 
