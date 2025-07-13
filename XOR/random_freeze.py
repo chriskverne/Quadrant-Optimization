@@ -12,7 +12,7 @@ from data.params import *
 def train_qnn_param_shift(x, y, n_qubits, n_layers, num_epochs):
     forward_pass = create_qnn_XOR(n_layers, n_qubits)
     fp = 0
-    params = two_four
+    params = five_ten
     loss_history = []
     fp_history = []
 
@@ -82,8 +82,8 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_epochs):
 
     
 # --------------------------------- Model Setup ---------------------------
-n_qubits = 4
-n_layers = 2
+n_qubits = 10
+n_layers = 5
 n_epochs = 400
 x,y = get_xor_data(n_qubits, 100000)
 

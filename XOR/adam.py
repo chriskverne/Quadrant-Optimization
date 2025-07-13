@@ -1,7 +1,7 @@
 import pennylane as qml
 import pennylane.numpy as pnp
 import os
-import sys
+import sys #
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from tqdm import tqdm
 from helper.create_qnn_xor import create_qnn_XOR

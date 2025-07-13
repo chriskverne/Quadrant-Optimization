@@ -8,12 +8,11 @@ from helper.get_xor_data import get_xor_data
 from helper.create_qnn_xor import create_qnn_XOR
 from helper.cross_entropy import cross_entropy_loss
 from data.params import *
-import pandas as pd
 
 def train_qnn_param_shift(x, y, n_qubits, n_layers, num_epochs):
     forward_pass = create_qnn_XOR(n_layers, n_qubits)
     fp = 0
-    params = two_four
+    params = five_ten
     loss_history = []
     fp_history = []
 
@@ -80,7 +79,7 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_epochs):
 
         active_l = pnp.zeros(n_layers)
         active_l[active_indices] = 1
-        print(f'Active Layer: {active_l}')
+        #print(f'Active Layer: {active_l}')
 
         # Reset sum_grads for active layers, keep for frozen layers
         for l in range(n_layers):
@@ -98,8 +97,8 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_epochs):
 
     
 # --------------------------------- Model Setup ---------------------------
-n_qubits = 4
-n_layers = 2
+n_qubits = 10
+n_layers = 5
 n_epochs = 400
 x,y = get_xor_data(n_qubits, 100000)
 

@@ -61,7 +61,7 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_epochs):
 
     
 # --------------------------------- Model Setup ---------------------------
-n_qubits = 8
+n_qubits = 8 #
 n_layers = 3
 n_epochs = 400
 x,y = get_xor_data(n_qubits, 10000)

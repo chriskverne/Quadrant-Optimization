@@ -7,7 +7,7 @@ from tqdm import tqdm
 from helper.cross_entropy import cross_entropy_loss
 from helper.get_xor_data import get_xor_data
 from helper.create_qnn_xor import create_qnn_XOR
-from data.params import *
+from data.params import * #
 
 
 def train_qnn_param_shift(x, y, n_qubits, n_layers, num_epochs):
