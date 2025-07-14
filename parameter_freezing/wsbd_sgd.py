@@ -3,9 +3,8 @@ import pennylane.numpy as pnp
 import os
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-import math
 from tqdm import tqdm
-from helper.fetch_mnist import fetch_mnist, preprocess_image
+from helper.fetch_mnist import preprocess_image
 from helper.create_qnn_no_noise import create_qnn
 from helper.cross_entropy import cross_entropy_loss
 from data.params import *
@@ -43,7 +42,7 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
 
     """Training Loop"""
     for epoch in tqdm(range(num_epochs), desc="Epochs"):
-        s = 100
+        s = 25
         x_t = x[epoch*s:(epoch+1)*s]
         y_t = y[epoch*s:(epoch+1)*s]
         epoch_loss = 0
