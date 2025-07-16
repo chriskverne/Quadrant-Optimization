@@ -42,7 +42,7 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
 
     """Training Loop"""
     for epoch in tqdm(range(num_epochs), desc="Epochs"):
-        s = 25
+        s = 100
         x_t = x[epoch*s:(epoch+1)*s]
         y_t = y[epoch*s:(epoch+1)*s]
         epoch_loss = 0
