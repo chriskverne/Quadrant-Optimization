@@ -369,21 +369,48 @@ bay_x3 = [0, 2500, 5000, 7500, 10000, 12500, 15000, 17500, 20000, 22500, 25000, 
 bay_y3 = [1.5886, 1.3511, 1.1998, 1.1969, 1.2711, 1.2152, 1.1918, 1.2566, 1.3717, 1.2526, 1.1420, 1.2182, 1.3675, 1.2157, 1.2005, 1.2650, 1.2334, 1.1749, 1.4270, 1.2600, 1.2219, 1.2602, 1.1911, 1.0869, 1.1861, 1.3557, 1.2165, 1.1463, 1.1460, 1.1956, 1.1990, 1.2029, 1.1150, 1.1900, 1.2663, 1.1970, 1.1319, 1.1912, 1.2712, 1.1535, 1.1931, 1.0495, 1.1818, 1.1876, 1.1947, 1.1531, 1.2816, 1.2782, 1.3693, 1.3810, 1.3420, 1.3159, 1.4282, 1.2887, 1.2610, 1.2088, 1.3065, 1.2575, 1.2486, 1.2073, 1.2601, 1.2355, 1.2348, 1.1652, 1.2345, 1.2367, 1.2780, 1.1655, 1.2470, 1.2494, 1.2183, 1.2865, 1.2719, 1.2951, 1.2476, 1.1780, 1.3181, 1.3810, 1.2341, 1.2354, 1.1574, 1.1542, 1.1065, 1.1499, 1.1439, 1.1883, 1.1636, 1.1004, 1.1302, 1.1564, 1.1598, 1.2654, 1.1985, 1.1373, 1.1855, 1.1201, 1.1586, 1.1595, 1.1279, 1.2716, 1.2609, 1.3178, 1.2568, 1.3052, 1.0987, 1.2938, 1.2674, 1.1297, 1.1726, 1.1115, 1.0617, 1.1216, 1.0948, 1.1547, 1.1759, 1.0843, 1.0627, 1.2471, 1.1924, 1.1030, 1.1685, 1.1357, 1.1348]
 
 """Plots"""
+def get_marker_every(data_x, interval=1000):
+    if len(data_x) == 0:
+        return None
+    # Calculate how many data points correspond to the desired interval
+    step = max(1, len(data_x) // (max(data_x) // interval)) if max(data_x) > 0 else 1
+    return slice(0, None, step)
+
+
 plt.figure(figsize=(10, 6))
+colors = ['#1f77b4', '#ff7f0e', "#ff58ee", "#757575", '#9467bd', 
+          '#8c564b', '#2ca02c', '#d62728', "#008984", '#17becf', "#000000FF"]
+
+styles = ['-', '-', '-', '-', '-', '-', '-', '-', '--', '--', '--']
+markers = ['D', 'o', '', '', '', '', 'D', 'o', '', '', '']
 
 # MNIST 4-qubit, 2-layer
-# plt.plot(a3_x2, a3_y2, label='SGD WSBD', linestyle='-') # c
-# plt.plot(no_r_x, no_r_y, label='SGD WSBD NO RESET', linestyle='-') # Not sure if needed
 # plt.plot(sgd_x2, sgd_y2, label='SGD', linestyle='-') # c
-# plt.plot(a3_adam_x6, a3_adam_y6, label='Adam WSBD', linestyle='-') # c
-# plt.plot(b_adam_x6, b_adam_y6, label='Adam', linestyle='-') # c
+# plt.plot(a3_x2, a3_y2, label='WSBD-SGD', linestyle='-') # c
+# plt.plot(dbd_x2, dbd_y2, label='DBD-SGD', linestyle='-') # c
+# plt.plot(rf_x, rf_y, label='SBD-SGD', linestyle='-') # c
+# plt.plot(wsbd_l_x, wsbd_l_y, label='L-WSBD-SGD', linestyle='-') # c
+# plt.plot(no_r_x, no_r_y, label='WSBD NO RESET', linestyle='-') # c
+# plt.plot(b_adam_x6, b_adam_y6, label='ADAM', linestyle='-') # c
+# plt.plot(a3_adam_x6, a3_adam_y6, label='WSBD-ADAM', linestyle='-') # c
 # plt.plot(spsa_x2, spsa_y2, label='SPSA', linestyle='-') # c
-# plt.plot(rf_x, rf_y, label='Random Freeze SGD', linestyle='-') # c
-# plt.plot(nm_x2, nm_y2, label='Nelder Mead', linestyle='-') # c
-# plt.plot(dbd_x2, dbd_y2, label='DBD', linestyle='-') # c
-# plt.plot(wsbd_l_x, wsbd_l_y, label='L-WSBD SGD', linestyle='-') # c
-# plt.plot(bay_x, bay_y, label='Bayesian', linestyle='-') # c
+# plt.plot(nm_x2, nm_y2, label='NELDER MEAD', linestyle='-') # c
+# plt.plot(bay_x, bay_y, label='BAYESIAN', linestyle='-') # c
 # plt.xlim(0, 50000)
+
+# NICER STYLE
+plt.plot(sgd_x2, sgd_y2, label='SGD', linestyle=styles[0], color=colors[0], marker=markers[0], markersize=4, linewidth=2, markevery=get_marker_every(sgd_x2))
+plt.plot(a3_x2, a3_y2, label='WSBD-SGD', linestyle=styles[1], color=colors[1], marker=markers[1], markersize=4, linewidth=2, markevery=get_marker_every(a3_x2))
+plt.plot(dbd_x2, dbd_y2, label='DBD-SGD', linestyle=styles[2], color=colors[2], marker=markers[2], markersize=4, linewidth=2, markevery=get_marker_every(dbd_x2))
+plt.plot(rf_x, rf_y, label='SBD-SGD', linestyle=styles[3], color=colors[3], marker=markers[3], markersize=4, linewidth=2, markevery=get_marker_every(rf_x))
+plt.plot(wsbd_l_x, wsbd_l_y, label='L-WSBD-SGD', linestyle=styles[4], color=colors[4], marker=markers[4], markersize=4, linewidth=2, markevery=get_marker_every(wsbd_l_x))
+plt.plot(no_r_x, no_r_y, label='WSBD NO RESET', linestyle=styles[5], color=colors[5], marker=markers[5], markersize=4, linewidth=2, markevery=get_marker_every(no_r_x))
+plt.plot(b_adam_x6, b_adam_y6, label='ADAM', linestyle=styles[6], color=colors[6], marker=markers[6], markersize=4, linewidth=2, markevery=get_marker_every(b_adam_x6))
+plt.plot(a3_adam_x6, a3_adam_y6, label='WSBD-ADAM', linestyle=styles[7], color=colors[7], marker=markers[7], markersize=4, linewidth=2, markevery=get_marker_every(a3_adam_x6))
+plt.plot(spsa_x2, spsa_y2, label='SPSA', linestyle=styles[8], color=colors[8], marker=markers[8], markersize=4, linewidth=2, markevery=get_marker_every(spsa_x2))
+plt.plot(nm_x2, nm_y2, label='NELDER MEAD', linestyle=styles[9], color=colors[9], marker=markers[9], markersize=4, linewidth=2, markevery=get_marker_every(nm_x2))
+plt.plot(bay_x, bay_y, label='BAYESIAN', linestyle=styles[10], color=colors[10], marker=markers[10], markersize=6, linewidth=2, markevery=get_marker_every(bay_x))
+plt.xlim(0, 50000)
 
 # # MNIST 8-qubit, 3-layer
 # plt.plot(a3_x5, a3_y5, label='SGD WSBD', linestyle='-') # c
@@ -400,6 +427,20 @@ plt.figure(figsize=(10, 6))
 # # plt.plot(bay_x2_2, bay_y2_2, label='Bayesian 50 3', linestyle='-') # a bit more stable but way too slow for 4 qubit qnn
 # plt.xlim(0, 100000)
 
+# NICER STYLE
+# plt.plot(sgd_x3, sgd_y3, label='SGD', linestyle=styles[0], color=colors[0], marker=markers[0], markersize=4, linewidth=2, markevery=get_marker_every(sgd_x2))
+# plt.plot(a3_x5, a3_y5, label='WSBD-SGD', linestyle=styles[1], color=colors[1], marker=markers[1], markersize=4, linewidth=2, markevery=get_marker_every(a3_x2))
+# plt.plot(dbd_x3, dbd_y3, label='DBD-SGD', linestyle=styles[2], color=colors[2], marker=markers[2], markersize=4, linewidth=2, markevery=get_marker_every(dbd_x2))
+# plt.plot(rf_x2, rf_y2, label='SBD-SGD', linestyle=styles[3], color=colors[3], marker=markers[3], markersize=4, linewidth=2, markevery=get_marker_every(rf_x))
+# plt.plot(wsbd_l_x2, wsbd_l_y2, label='L-WSBD-SGD', linestyle=styles[4], color=colors[4], marker=markers[4], markersize=4, linewidth=2, markevery=get_marker_every(wsbd_l_x))
+# plt.plot(no_r_x2, no_r_y2, label='WSBD NO RESET', linestyle=styles[5], color=colors[5], marker=markers[5], markersize=4, linewidth=2, markevery=get_marker_every(no_r_x))
+# plt.plot(b_adam_x7, b_adam_y7, label='ADAM', linestyle=styles[6], color=colors[6], marker=markers[6], markersize=4, linewidth=2, markevery=get_marker_every(b_adam_x6))
+# plt.plot(a3_adam_x7, a3_adam_y7, label='WSBD-ADAM', linestyle=styles[7], color=colors[7], marker=markers[7], markersize=4, linewidth=2, markevery=get_marker_every(a3_adam_x6))
+# plt.plot(spsa_x3, spsa_y3, label='SPSA', linestyle=styles[8], color=colors[8], marker=markers[8], markersize=4, linewidth=2, markevery=get_marker_every(spsa_x2))
+# plt.plot(nm_x3, nm_y3, label='NELDER MEAD', linestyle=styles[9], color=colors[9], marker=markers[9], markersize=4, linewidth=2, markevery=get_marker_every(nm_x2))
+# plt.plot(bay_x2, bay_y2, label='BAYESIAN', linestyle=styles[10], color=colors[10], marker=markers[10], markersize=6, linewidth=2, markevery=get_marker_every(bay_x))
+# plt.xlim(0, 100000)
+
 # MNIST 10-qubit 5-layer
 # plt.plot(b_adam_x8, b_adam_y8, label='ADAM', linestyle='-') # c
 # plt.plot(a3_adam_x8, a3_adam_y8, label='WSBD ADAM', linestyle='-') # c
@@ -414,10 +455,31 @@ plt.figure(figsize=(10, 6))
 # plt.plot(bay_x3, bay_y3, label='Bayesian', linestyle='-') # c
 # plt.xlim(0, 300000)
 
-plt.title('Loss Decrease Over Forward Passes')
-plt.xlabel('Number of Forward Passes')
-plt.ylabel('Loss')
+# NICER STYLE
+# plt.plot(sgd_x4, sgd_y4, label='SGD', linestyle=styles[0], color=colors[0], marker=markers[0], markersize=4, linewidth=2, markevery=get_marker_every(sgd_x2))
+# plt.plot(a3_x6, a3_y6, label='WSBD-SGD', linestyle=styles[1], color=colors[1], marker=markers[1], markersize=4, linewidth=2, markevery=get_marker_every(a3_x2))
+# plt.plot(dbd_x4, dbd_y4, label='DBD-SGD', linestyle=styles[2], color=colors[2], marker=markers[2], markersize=4, linewidth=2, markevery=get_marker_every(dbd_x2))
+# plt.plot(rf_x3, rf_y3, label='SBD-SGD', linestyle=styles[3], color=colors[3], marker=markers[3], markersize=4, linewidth=2, markevery=get_marker_every(rf_x))
+# plt.plot(wsbd_l_x3, wsbd_l_y3, label='L-WSBD-SGD', linestyle=styles[4], color=colors[4], marker=markers[4], markersize=4, linewidth=2, markevery=get_marker_every(wsbd_l_x))
+# plt.plot(no_r_x3, no_r_y3, label='WSBD NO RESET', linestyle=styles[5], color=colors[5], marker=markers[5], markersize=4, linewidth=2, markevery=get_marker_every(no_r_x))
+# plt.plot(b_adam_x8, b_adam_y8, label='ADAM', linestyle=styles[6], color=colors[6], marker=markers[6], markersize=4, linewidth=2, markevery=get_marker_every(b_adam_x6))
+# plt.plot(a3_adam_x8, a3_adam_y8, label='WSBD-ADAM', linestyle=styles[7], color=colors[7], marker=markers[7], markersize=4, linewidth=2, markevery=get_marker_every(a3_adam_x6))
+# plt.plot(spsa_x4[::5], spsa_y4[::5], label='SPSA', linestyle=styles[8], color=colors[8], marker=markers[8], markersize=4, linewidth=2, markevery=get_marker_every(spsa_x2))
+# plt.plot(nm_x4, nm_y4, label='NELDER MEAD', linestyle=styles[9], color=colors[9], marker=markers[9], markersize=4, linewidth=2, markevery=get_marker_every(nm_x2))
+# plt.plot(bay_x3, bay_y3, label='BAYESIAN', linestyle=styles[10], color=colors[10], marker=markers[10], markersize=6, linewidth=2, markevery=get_marker_every(bay_x))
+# plt.xlim(0, 300000)
 
-plt.legend()
-plt.grid(True)
+#plt.title('Loss Decrease Over Forward Passes')
+plt.xlabel('Number of Forward Passes', fontsize='13')
+plt.ylabel('Cross Entropy Loss', fontsize='13')
+plt.gca().set_facecolor("#e2ddddaf")
+plt.tick_params(axis='both', which='major', labelsize=12)  # Change 14 to your desired size
+
+plt.minorticks_on()
+
+plt.legend(ncol=2, loc='upper right')
+plt.legend(ncol=2, loc='upper right', framealpha=1.0, facecolor='white', edgecolor='black')
+
+plt.grid(True, which='major', alpha=0.5, linestyle='-', linewidth=0.8, color='gray')
+plt.grid(True, which='minor', alpha=0.3, linestyle=':', linewidth=0.5, color='gray')
 plt.show()
