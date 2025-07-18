@@ -47,7 +47,6 @@ recent_x2 = [0, 20100.0, 26200.0, 32300.0, 38400.0, 44500.0, 50600.0, 56700.0, 6
 recent_y2 = [1.5886, 1.4421, 1.3350, 1.2330, 1.2552, 1.1728, 1.1955, 1.0989, 1.0296, 1.1489, 1.1360, 1.1224, 1.0460, 1.0993, 1.0479, 1.0804, 1.0776, 0.9966, 1.1104, 1.0956, 1.0048, 0.9954, 0.9820, 1.0081, 1.0083, 1.1013, 1.0135, 0.9912, 0.9602, 1.0641, 0.9853, 0.9976, 1.0214, 0.9410, 0.9182, 0.9499, 0.9383, 1.0211, 0.9345, 1.0158, 0.8962, 0.8748, 0.8372, 0.7673, 0.8847, 0.8722, 0.8868, 0.7680, 0.7838, 0.8514, 0.7938, 0.8327, 0.8457, 0.8191, 0.8558, 0.7796, 0.7963, 0.8049, 0.8054, 0.8128, 0.8228, 0.8418, 0.8628, 0.8581, 0.8344, 0.7694, 0.8045, 0.8390, 0.8090, 0.8186, 0.8143, 0.7507, 0.8126, 0.7476, 0.8049, 0.7730, 0.7036, 0.7831, 0.7904, 0.9107, 0.7917]
 
 
-
 plt.figure(figsize=(10, 6))
 
 # 8 qubit 3 layer
@@ -59,16 +58,21 @@ plt.figure(figsize=(10, 6))
 # plt.xlim(0, 100000)
 
 # 10 qubit 5 layer
-plt.plot(wsbd_x2, wsbd_y2, label='Sum')
-plt.plot(ema_x2, ema_y2, label='EMA')
-plt.plot(var_x2, var_y2, label='Variance')
-plt.plot(fish_x2, fish_y2, label='Fisher Matrix')
-plt.plot(recent_x2, recent_y2, label='Recent')
+plt.plot(wsbd_x2, wsbd_y2, label='Sum', linewidth=3, marker='D', markersize=8)
+plt.plot(recent_x2, recent_y2, label='Recent', linewidth=3)
+plt.plot(var_x2, var_y2, label='Variance', linewidth=3)
+plt.plot(ema_x2, ema_y2, label='EMA', linewidth=3)
+plt.plot(fish_x2, fish_y2, label='Fisher Matrix', linewidth=3)
 plt.xlim(0, 300000)
 
-plt.title('Loss Decrease Over Forward Passes')
-plt.xlabel('Number of Forward Passes')
-plt.ylabel('Loss')
-plt.legend()
-plt.grid(True)
+plt.xlabel('Number of Forward Passes', fontsize='13')
+plt.ylabel('Cross Entropy Loss', fontsize='13')
+plt.tick_params(axis='both', which='major', labelsize=12)
+plt.legend(loc='upper right', framealpha=1.0, facecolor='white', edgecolor='black', fontsize=14)
+plt.minorticks_on()
+plt.grid(True, which='major', alpha=0.5, linestyle='-', linewidth=0.8, color='gray')
+plt.grid(True, which='minor', alpha=0.3, linestyle=':', linewidth=0.5, color='gray')
+plt.gca().set_facecolor("#CDD6D9FF")
+plt.xlim(0,300000)
 plt.show()
+plt.savefig('./figs/ip_metrics.png')

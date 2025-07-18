@@ -101,3 +101,5 @@ plt.grid(True, which='minor', alpha=0.3, linestyle=':', linewidth=0.5, color='gr
 plt.gca().set_facecolor("#CDD6D9FF")
 plt.xlim(0,300000)
 plt.show()
+
+plt.savefig('./figs/ip_metrics.png')
