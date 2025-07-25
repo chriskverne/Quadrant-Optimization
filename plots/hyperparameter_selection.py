@@ -74,21 +74,21 @@ ty4 = [1.58859, 1.2752, 1.0989, 1.0604, 1.0312, 0.9896, 0.9837, 0.9500, 0.9329]
 plt.figure(figsize=(10, 6))
 
 # Freeze thresholds
-plt.plot(x,y,label='s=100, F=0%', linewidth=3)
-plt.plot(x1,y1,label='s=100, F=10%', linewidth=3)
-plt.plot(x2,y2,label='s=100, F=30%', linewidth=3)
-plt.plot(x3,y3,label='s=100, F=50%', linewidth=3)
-plt.plot(x4,y4,label='s=100, F=70%', linewidth=3, marker='D', markersize=8)
-plt.plot(x5,y5,label='s=100, F=90%', linewidth=3)
+# plt.plot(x,y,label=r'$\tau=100, \lambda_f=0\%$', linewidth=3)
+# plt.plot(x1,y1,label=r'$\tau=100, \lambda_f=10\%$', linewidth=3)
+# plt.plot(x2,y2,label=r'$\tau=100, \lambda_f=30\%$', linewidth=3)
+# plt.plot(x3,y3,label=r'$\tau=100, \lambda_f=50\%$', linewidth=3)
+# plt.plot(x4,y4,label=r'$\tau=100, \lambda_f=70\%$', linewidth=4, marker='D', markersize=9)
+# plt.plot(x5,y5,label=r'$\tau=100, \lambda_f=90\%$', linewidth=3)
 
 styles = ['-', '-', '-', '-']
 markers = ['', '', '', '']
 
 # Timestep thresholds
-# plt.plot(tx,ty,label='s=25,   F=70%', linewidth=3, linestyle='-')
-# plt.plot(tx2,ty2,label='s=100, F=70%', linewidth=3, linestyle='-', marker='D', markersize=8)
-# plt.plot(tx3,ty3,label='s=300, F=70%', linewidth=3, linestyle='-')
-# plt.plot(tx4,ty4,label='s=500, F=70%', linewidth=3, linestyle='-')
+plt.plot(tx,ty,label=r'$\tau=25,   \lambda_f=70\%$', linewidth=3, linestyle='-')
+plt.plot(tx2,ty2,label=r'$\tau=100, \lambda_f=70\%$', linewidth=4, linestyle='-', marker='D', markersize=9)
+plt.plot(tx3,ty3,label=r'$\tau=300, \lambda_f=70\%$', linewidth=3, linestyle='-')
+plt.plot(tx4,ty4,label=r'$\tau=500, \lambda_f=70\%$', linewidth=3, linestyle='-')
 
 #plt.title('Loss Decrease Over Forward Passes')
 plt.xlabel('Number of Forward Passes', fontsize='13')
