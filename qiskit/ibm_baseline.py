@@ -7,12 +7,11 @@ import pandas as pd
 # Qiskit imports
 from qiskit import QuantumCircuit, ClassicalRegister
 from qiskit.circuit import ParameterVector
-from qiskit_algorithms.gradients import ParamShiftSamplerGradient
 from qiskit_aer import AerSimulator
 
 # Import your helper functions (we'll need to adapt these too)
-from helper.fetch_mnist import fetch_mnist, preprocess_image
-from helper.cross_entropy import cross_entropy_loss, cross_entropy_grad
+from helper.fetch_mnist import preprocess_image
+from helper.cross_entropy import cross_entropy_loss
 from data.params import *
 
 def cross_entropy_grad_softmax(softmax_probabilities, true_label_index):

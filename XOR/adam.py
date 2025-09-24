@@ -64,7 +64,8 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_epochs):
             fp += 2*params.size
 
             # Adam optimizer update
-            m = beta1 * m * + (1 - beta1) * gradients
+            m = beta1 * m + (1 - beta1) * gradients
+            #m = beta1 * m * + (1 - beta1) * gradients
             v = beta2 * v + (1 - beta2) * (gradients ** 2)
             m_hat = m / (1 - beta1 ** t)
             v_hat = v / (1 - beta2 ** t)
