@@ -168,8 +168,8 @@ def train_vqe(n_qubits, n_layers, num_epochs, noise_cfg=None, shots=2000,
         v_hat = v / (1 - beta2 ** t)
         params = params - lr * m_hat / (pnp.sqrt(v_hat) + eps)
 
-        # if epoch % max(1, num_epochs // 10) == 0 or epoch == 1:
-        print(f"Epoch {epoch:4d} | Energy (shot-est.): {float(E):.8f} FP {fp}")
+        if epoch % 5 == 0:
+            print(f"Epoch {epoch:4d} | Energy (shot-est.): {float(E):.8f} FP {fp}")
 
     return params, loss_history
 
@@ -191,7 +191,7 @@ def build_noise_from_calibration(n_qubits, calib):
 # ------------------------ Run ------------------------------------------------
 if __name__ == "__main__":
     n_qubits = 2
-    n_layers = 2
+    n_layers = 3
     num_epochs = 200
 
     # Example: populate with your real calibration data

@@ -198,9 +198,8 @@ def train_vqe(n_qubits, n_layers, num_epochs, noise_cfg=None, shots=2000,
         m = pnp.where(active_p == 0, 0, m)  # Reset first moment for frozen params
         v = pnp.where(active_p == 0, 0, v)  # Reset second moment for frozen params
 
-        # if epoch % max(1, num_epochs // 10) == 0 or epoch == 1:
-        print(f"Epoch {epoch:4d} | Energy (shot-est.): {float(E):.8f} FP {fp} Active: {active_p}")
-
+        if epoch % 5 == 0:
+            print(f"Epoch {epoch:4d} | Energy (shot-est.): {float(E):.8f} FP {fp}")
 
     return params, loss_history
 
@@ -222,7 +221,7 @@ def build_noise_from_calibration(n_qubits, calib):
 # ------------------------ Run ------------------------------------------------
 if __name__ == "__main__":
     n_qubits = 2
-    n_layers = 2
+    n_layers = 3
     num_epochs = 200
 
     # Example: populate with your real calibration data
@@ -244,5 +243,17 @@ if __name__ == "__main__":
     # Include finite shots to add sampling noise
     params, history = train_vqe(
         n_qubits, n_layers, num_epochs,
-        noise_cfg=noise_cfg, shots=4000, lr=0.01
+        noise_cfg=noise_cfg, shots=1000, lr=0.01
     )
+
+# Random real IBM data
+# {
+#   "T1": [56.89e-6, 372.73e-6, 311.97e-6, 301.17e-6, 292.19e-6, 307.9e-6, 167.87e-6, 414.46e-6, 253.11e-6, 225.45e-6],
+#   "T2": [82.74e-6, 343.29e-6, 320.36e-6, 294.83e-6, 296.07e-6, 276.1e-6, 218.31e-6, 355.27e-6, 331.2e-6, 352.94e-6],
+#   "t_1q": 32e-9,
+#   "t_2q": 88e-9,
+#   "t_idle": 2.584e-6,
+#   "p1q_dep": 2.5e-4,
+#   "p2q_dep": 1.2e-2,
+#   "p_ro": [0.00598, 0.00635, 0.00623, 0.00464, 0.00317, 0.00378, 0.05444, 0.00342, 0.01245, 0.06335]
+# }
