@@ -141,6 +141,7 @@ def train_vqe(n_qubits, n_layers, num_epochs, noise_cfg=None, shots=2000,
               lr=0.01, beta1=0.9, beta2=0.999, eps=1e-8, seed=1234):
     energy = build_energy_fn(n_layers, n_qubits, noise_cfg=noise_cfg, shots=shots)
     params = init_params(n_layers, n_qubits, seed=seed)
+    print(f'Initial energy: {energy(params)}')
 
     # Adam state
     fp = 0
@@ -190,9 +191,9 @@ def build_noise_from_calibration(n_qubits, calib):
 
 # ------------------------ Run ------------------------------------------------
 if __name__ == "__main__":
-    n_qubits = 1
-    n_layers = 4
-    num_epochs = 500
+    n_qubits = 4
+    n_layers = 3
+    num_epochs = 200
 
     # Example: populate with your real calibration data
     calib = {
