@@ -150,7 +150,7 @@ def train_vqe(n_qubits, n_layers, num_epochs, noise_cfg=None, shots=2000,
     for epoch in tqdm(range(1, num_epochs + 1), desc="Epochs"):
         # Forward/loss (finite-shots => stochastic)
         E = energy(params)
-        loss_history.append(E)
+        loss_history.append((fp, E.item()))
 
         # Gradients (parameter-shift works with channels on default.mixed)
         g = grad_fn(params)
@@ -181,9 +181,9 @@ def build_noise_from_calibration(n_qubits, calib):
 
 # ------------------------ Run ------------------------------------------------
 if __name__ == "__main__":
-    n_qubits = 2
-    n_layers = 4
-    num_epochs = 500
+    n_qubits = 4
+    n_layers = 3
+    num_epochs = 300
 
     # Example: populate with your real calibration data
     calib = {
@@ -221,3 +221,5 @@ if __name__ == "__main__":
         n_qubits, n_layers, num_epochs,
         noise_cfg=noise_cfg, shots=4000, lr=0.01
     )
+
+    print(history)

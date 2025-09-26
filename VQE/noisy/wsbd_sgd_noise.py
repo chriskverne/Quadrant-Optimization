@@ -145,7 +145,7 @@ def train_vqe(n_qubits, n_layers, num_epochs, noise_cfg=None, shots=2000,
     fp = 0
     active_p = pnp.ones_like(params)  # Initialize all as active
     sum_grads = pnp.zeros_like(params)
-    freeze_t = 0.70
+    freeze_t = 0.50
 
     loss_history = []
     grad_fn = qml.grad(lambda th: energy(th))
@@ -153,13 +153,13 @@ def train_vqe(n_qubits, n_layers, num_epochs, noise_cfg=None, shots=2000,
     for epoch in tqdm(range(1, num_epochs + 1), desc="Epochs"):
         # Forward/loss (finite-shots => stochastic)
         E = energy(params)
-        loss_history.append(E)
+        loss_history.append((fp, E.item()))
 
         # Gradients (parameter-shift works with channels on default.mixed)
         g = grad_fn(params)
         g *= active_p 
         sum_grads += g
-        fp += 2*pnp.sum(active_p)
+        fp += 2*int(pnp.sum(active_p))
         params -= lr*g
 
         # Decide what to freeze (mark as 0 for frozen, 1 for active)
@@ -202,9 +202,14 @@ def build_noise_from_calibration(n_qubits, calib):
 
 # ------------------------ Run ------------------------------------------------
 if __name__ == "__main__":
-    n_qubits = 1 #1,2,4 seems good
-    n_layers = 4 # 1,2,3,4,5,6?? Layers dont seem as impactful as the qubit count
-    num_epochs = 500
+    # 2q 1l
+    # 2q 4l
+    # 4q 1l
+    # 4q 2l 
+    # 4q 3l
+    n_qubits = 4 #1,2,4 seems good
+    n_layers = 3 # 1,2,3,4,5,6?? Layers dont seem as impactful as the qubit count
+    num_epochs = 600
 
     # Real IBM Data
     calib = {
@@ -243,4 +248,6 @@ if __name__ == "__main__":
         n_qubits, n_layers, num_epochs,
         noise_cfg=noise_cfg, shots=1000, lr=0.01
     )
+
+    print(history)
 
