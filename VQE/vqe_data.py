@@ -127,7 +127,7 @@ titles = ['1 Qubit 2 Layers', '1 Qubit 4 Layers', '1 Qubit 8 Layers',
           '2 Qubits 1 Layer', '2 Qubits 2 Layers', '2 Qubits 4 Layers', 
           '4 Qubits 1 Layer', '4 Qubits 2 Layers', '4 Qubits 3 Layers']
 
-g_state_energy = [-1, -2.23606797749979, -4.758770483143635]
+g_state_energy = [-1,-1,-1, -2.23606797749979,-2.23606797749979,-2.23606797749979, -4.758770483143635,-4.758770483143635,-4.758770483143635]
 
 # Define qubit → xlim mapping
 # Define xlim values for each case
@@ -144,6 +144,8 @@ xlim_map = {
 }
 
 import matplotlib.pyplot as plt
+import matplotlib.ticker as mticker
+
 
 # Group indices for each qubit set
 group_indices = {
@@ -152,39 +154,39 @@ group_indices = {
     "4 Qubits": [6, 7, 8]
 }
 
+
 for group_name, indices in group_indices.items():
-    fig, axes = plt.subplots(1, 3, figsize=(18, 5))  # 3 plots side by side
+    fig, axes = plt.subplots(1, 3, figsize=(14, 5))  
 
-    for ax, i in zip(axes, indices):
-        wsbd_adam_active = wsbd_adam[i]
-        adam_active = adam[i]
-        sgd_active = sgd[i]
-        wsbd_sgd_active = wsbd_sgd[i]
+    for ax_idx, (ax, i) in enumerate(zip(axes, indices)):
+        wsbd_adam_fp, wsbd_adam_energy = zip(*wsbd_adam[i])
+        adam_fp, adam_energy = zip(*adam[i])
+        sgd_fp, sgd_energy = zip(*sgd[i])
+        wsbd_sgd_fp, wsbd_sgd_energy = zip(*wsbd_sgd[i])
 
-        # Unpack (fp, energy) pairs
-        wsbd_adam_fp, wsbd_adam_energy = zip(*wsbd_adam_active)
-        adam_fp, adam_energy = zip(*adam_active)
-        sgd_fp, sgd_energy = zip(*sgd_active)
-        wsbd_sgd_fp, wsbd_sgd_energy = zip(*wsbd_sgd_active)
+        # Labels only for first subplot
+        L = (lambda name: name) if ax_idx == 0 else (lambda _: '_nolegend_')
 
-        # Plot
-        ax.plot(wsbd_adam_fp, wsbd_adam_energy, label='wsbd adam')
-        ax.plot(adam_fp, adam_energy, label='adam')
-        ax.plot(sgd_fp, sgd_energy, label='sgd')
-        ax.plot(wsbd_sgd_fp, wsbd_sgd_energy, label='wsbd sgd')
+        ax.plot(wsbd_adam_fp[::5], wsbd_adam_energy[::5], label=L('wsbd adam'), linewidth=4, color='red')
+        ax.plot(adam_fp[::10], adam_energy[::10], label=L('adam'), linewidth=4, color='green', linestyle='--')
+        ax.plot(sgd_fp[::10], sgd_energy[::10], label=L('sgd'), linewidth=4, color='blue', linestyle='--')
+        ax.plot(wsbd_sgd_fp[::5], wsbd_sgd_energy[::5], label=L('wsbd sgd'), linewidth=4, color='orange')
+        ax.axhline(y=g_state_energy[i], color='black', linestyle='--', linewidth=3, label=L('Ground State Energy'))
 
-        # Apply specific xlim
-        title = titles[i]
-        ax.set_xlim(0, xlim_map[title])
+        # Force x-axis from 0 → xlim, with 5 ticks, no decimals
+        xmax = xlim_map[titles[i]]
+        ax.set_xlim(0, xmax)
+        ax.xaxis.set_major_locator(mticker.LinearLocator(5))
+        ax.xaxis.set_major_formatter(mticker.FormatStrFormatter('%.0f'))
 
-        # Labels
-        ax.set_xlabel("Forward Passes")
-        ax.set_ylabel("Ground State Energy")
-        ax.set_title(title)
+        # Force y-axis to have 5 ticks, with 1 decimal
+        ax.yaxis.set_major_locator(mticker.LinearLocator(5))
+        ax.yaxis.set_major_formatter(mticker.FormatStrFormatter('%.1f'))
 
-    # Add legend only once (on the first subplot to keep it clean)
-    axes[0].legend()
+        ax.set_xlabel("Forward Passes", fontsize=14)
+        ax.set_title(titles[i], fontsize=16)
+        ax.tick_params(axis='both', which='major', labelsize=12, length=6, width=1.5)
 
-    # Tight layout for spacing
+    axes[0].legend(fontsize=12)
     plt.tight_layout()
     plt.show()
