@@ -11,46 +11,32 @@ from helper.cross_entropy import cross_entropy_loss
 from data.params import *
 import pandas as pd
 
-
 def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_epochs):
     forward_pass = create_qnn(n_layers, n_qubits)
     fp = 0
     params = five_ten
     loss_history = []
     fp_history = []
+    eval_acc_history = []
+    rng = pnp.random.default_rng(0)
 
     def cost_fn(params, image, label):
         out = forward_pass(image, params, num_measurment_gates)
         return cross_entropy_loss(out, label)
-    
     grad_fn = qml.grad(cost_fn, argnum=0)
-
-    # Adam optimizer parameters
-    alpha = 0.01 #0.001  # learning rate (default Adam value)
-    beta1 = 0.9    # exponential decay rate for first moment
-    beta2 = 0.999  # exponential decay rate for second moment
-    epsilon = 1e-8 # small constant to prevent division by zero
-    
-    # Adam optimizer state variables
-    m = pnp.zeros_like(params)  # first moment (mean of gradients)
-    v = pnp.zeros_like(params)  # second moment (variance of gradients)
-    t=0
     
     """Training Loop"""
-    for epoch in tqdm(range(num_epochs), desc="Epochs"):
+    for time_step in tqdm(range(num_epochs), desc="Time step"):
         s = 100
-        x_t = x[epoch*s:(epoch+1)*s]
-        y_t = y[epoch*s:(epoch+1)*s]
+        x_t = x[time_step*s:(time_step+1)*s]
+        y_t = y[time_step*s:(time_step+1)*s]
         epoch_loss = 0
         correct_predictions = 0
-                
-        for image, label in tqdm(zip(x_t, y_t), total=len(x_t), desc=f"Epoch {epoch+1}/{num_epochs}", leave=False):
-            # Increment time step for Adam
-            t += 1
-            
+        
+        for image, label in tqdm(zip(x_t, y_t), total=len(x_t), desc=f"Epoch {time_step+1}/{num_epochs}", leave=False):
             # Compute loss with current parameters
             out = forward_pass(image, params, num_measurment_gates)
-            fp += 1
+            fp+=1
             loss = cross_entropy_loss(out, label)
             epoch_loss += loss
             
@@ -63,31 +49,33 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
             gradients = grad_fn(params, image, label)
 
             # increase fp by 2*n_active_params
-            fp += 2*params.size
+            fp += 2*params.size 
 
-            # Adam optimizer update
-            # Update biased first moment estimate
-            m = beta1 * m + (1 - beta1) * gradients
-            # Update biased second raw moment estimate
-            v = beta2 * v + (1 - beta2) * (gradients ** 2)
-            
-            # Compute bias-corrected first moment estimate
-            m_hat = m / (1 - beta1 ** t)
-            # Compute bias-corrected second raw moment estimate
-            v_hat = v / (1 - beta2 ** t)
-            
-            # Update parameters using Adam formula
-            adam_update = alpha * m_hat / (pnp.sqrt(v_hat) + epsilon)
-            params = params - adam_update  # Use explicit assignment for clarity
+            # Update active params only
+            params -= 0.01* gradients
 
         # Calculate average loss and accuracy
         avg_loss = epoch_loss / len(x_t)
         accuracy = correct_predictions / len(x_t)
         loss_history.append(avg_loss)
         fp_history.append(fp)
-        print(f"\nNo FP: {fp}, Epoch {epoch+1}/{num_epochs}, Avg Loss: {avg_loss:.4f}, Accuracy: {accuracy:.2%}")
+        print(f"\nNo FP: {fp}, Epoch {time_step+1}/{num_epochs}, Avg Loss: {avg_loss:.4f}, Accuracy: {accuracy:.2%}")
+
+        if True:
+            idx = rng.choice(len(x), size=1000, replace=False)  # random 1k images
+            x_eval, y_eval = x[idx], y[idx]
+            correct = 0
+            for xi, yi in zip(x_eval, y_eval):
+                out_eval = forward_pass(xi, params, num_measurment_gates)
+                if pnp.argmax(out_eval) == yi:
+                    correct += 1
+            acc = correct / len(x_eval)
+            eval_acc_history.append((fp, acc))
+            print(f"[Eval @ {fp} FP] Accuracy on 1000 random samples: {acc:.2%}")
+            print(eval_acc_history) 
 
     return params, loss_history
+
     
 # --------------------------------- Model Setup ---------------------------
 df = pd.read_csv('../data/four_digit.csv')
@@ -97,7 +85,8 @@ y = df['label'].values
 num_qubits = num_components = 4
 num_layers = 2
 num_measurment_gates = 2
-num_epochs = 500
+num_epochs = 10
 x = preprocess_image(x, num_components)
+
 
 train_qnn_param_shift(x, y, num_qubits, num_layers, num_measurment_gates, num_epochs)

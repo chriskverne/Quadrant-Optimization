@@ -18,6 +18,9 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
     params = five_ten
     loss_history = []
     fp_history = []
+    eval_acc_history = []
+    rng = pnp.random.default_rng(0)
+
 
     def cost_fn(params, image, label):
         out = forward_pass(image, params, num_measurment_gates)
@@ -80,6 +83,7 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
             adam_update = alpha * m_hat / (pnp.sqrt(v_hat) + epsilon)
             params = params - adam_update  # Use explicit assignment for clarity
 
+
         # Calculate average loss and accuracy
         avg_loss = epoch_loss / len(x_t)
         accuracy = correct_predictions / len(x_t)
@@ -87,7 +91,19 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
         fp_history.append(fp)
         print(f"\nNo FP: {fp}, Epoch {epoch+1}/{num_epochs}, Avg Loss: {avg_loss:.4f}, Accuracy: {accuracy:.2%}")
 
-    return params, loss_history
+        if True:
+            idx = rng.choice(len(x), size=1000, replace=False)  # random 1k images
+            x_eval, y_eval = x[idx], y[idx]
+            correct = 0
+            for xi, yi in zip(x_eval, y_eval):
+                out_eval = forward_pass(xi, params, num_measurment_gates)
+                if pnp.argmax(out_eval) == yi:
+                    correct += 1
+            acc = correct / len(x_eval)
+            eval_acc_history.append((fp, acc))
+            print(f"[Eval @ {fp} FP] Accuracy on 1000 random samples: {acc:.2%}")
+            print(eval_acc_history)
+    return params, loss_history, eval_acc_history
     
 # --------------------------------- Model Setup ---------------------------
 df = pd.read_csv('../data/four_digit.csv')
@@ -97,7 +113,9 @@ y = df['label'].values
 num_qubits = num_components = 4
 num_layers = 2
 num_measurment_gates = 2
-num_epochs = 500
+num_epochs = 10
 x = preprocess_image(x, num_components)
 
-train_qnn_param_shift(x, y, num_qubits, num_layers, num_measurment_gates, num_epochs)
+_,_,acc_hist = train_qnn_param_shift(x, y, num_qubits, num_layers, num_measurment_gates, num_epochs)
+
+print(acc_hist)
