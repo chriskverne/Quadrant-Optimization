@@ -12,10 +12,15 @@ from data.params import *
 import pandas as pd
 
 
-def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_epochs):
+def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_epochs, x_test, y_test):
     forward_pass = create_qnn(n_layers, n_qubits)
     fp = 0
-    params = three_eight
+    if n_qubits == 4:
+        params = two_four
+    elif n_qubits == 8:
+        params = three_eight
+    elif n_qubits == 10:
+        params = five_ten
     loss_history = []
     fp_history = []
     eval_acc_history = []
@@ -127,8 +132,7 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_measurment_gates, num_ep
         print(f"\nNo FP: {fp}, Epoch {epoch+1}/{num_epochs}, Avg Loss: {avg_loss:.4f}, Accuracy: {accuracy:.2%}")
         
         if True:
-            idx = rng.choice(len(x), size=1000, replace=False)  # random 1k images
-            x_eval, y_eval = x[idx], y[idx]
+            x_eval, y_eval = x_test, y_test
             correct = 0
             for xi, yi in zip(x_eval, y_eval):
                 out_eval = forward_pass(xi, params, num_measurment_gates)
@@ -149,8 +153,13 @@ y = df['label'].values
 num_qubits = num_components = 4
 num_layers = 2
 num_measurment_gates = 2
-num_epochs = 10
+num_epochs = 30
 x = preprocess_image(x, num_components)
 
+rng = pnp.random.default_rng(0)
+perm = rng.permutation(len(x))
+split = int(0.75 * len(x))
+x_train, y_train = x[perm[:split]], y[perm[:split]]
+x_test,  y_test  = x[perm[split:]], y[perm[split:]]
 
-train_qnn_param_shift(x, y, num_qubits, num_layers, num_measurment_gates, num_epochs)
+train_qnn_param_shift(x_train, y_train, num_qubits, num_layers, num_measurment_gates, num_epochs, x_test, y_test)
