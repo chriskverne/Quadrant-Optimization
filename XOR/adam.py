@@ -16,6 +16,7 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_epochs):
     params = two_four
     loss_history = []
     fp_history = []
+    acc_curve=[]
 
     def cost_fn(params, image, label):
         out = forward_pass(image, params)
@@ -42,7 +43,7 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_epochs):
         epoch_loss = 0
         correct_predictions = 0
                 
-        for str,bit in tqdm(zip(x_t, y_t), total=len(x_t), desc=f"Epoch {epoch+1}/{num_epochs}", leave=False):
+        for i, (str,bit) in enumerate(tqdm(zip(x_t, y_t), total=len(x_t), desc=f"Epoch {epoch+1}/{num_epochs}", leave=False), start=1):
             # Increment time step for Adam
             t += 1
             
@@ -73,6 +74,23 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_epochs):
             # Update parameters using Adam formula
             adam_update = alpha * m_hat / (pnp.sqrt(v_hat) + epsilon)
             params = params - adam_update  # Use explicit assignment for clarity
+
+            if i % 20 == 0:
+                # Sample 100 random XOR points (fresh each time)
+                x_eval, y_eval = get_xor_data(n_qubits, 500)
+
+                # Forward passes only (no grads)
+                correct_eval = 0
+                for xe, ye in zip(x_eval, y_eval):
+                    out_eval = forward_pass(xe, params)
+                    pred_eval = pnp.argmax(out_eval)
+                    if int(pred_eval) == int(ye):
+                        correct_eval += 1
+                eval_acc = correct_eval / len(x_eval)
+                acc_curve.append((fp,eval_acc))
+                # eval_history.append((epoch, i, float(eval_acc)))
+                print(f"\nNo FP: {fp}, Avg Accuracy: {eval_acc}")
+                print(acc_curve)
 
         # Calculate average loss and accuracy
         avg_loss = epoch_loss / len(x_t)
