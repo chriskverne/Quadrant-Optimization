@@ -70,3 +70,9 @@ for dataset, title in zip([fourQ_data, eightQ_data, tenQ_data], titles):
         x = [fp for fp, acc in data]
         y = [acc for fp, acc in data]
         print(f'{title} {label} Max Accuracy: {max(y):.4f}% {x[y.index(max(y))]}FP')
+
+
+=== Summary (per circuit) ===
+4q-2l | N=100 | mean=1.353503s | median=1.302262s | p10=1.272735s | p90=1.340054s
+8q-3l | N=100 | mean=1.312452s | median=1.314898s | p10=1.279792s | p90=1.343166s
+10q-5l | N=100 | mean=1.313933s | median=1.307610s | p10=1.281279s | p90=1.348115s
