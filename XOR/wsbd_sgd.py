@@ -12,9 +12,11 @@ from data.params import *
 def train_qnn_param_shift(x, y, n_qubits, n_layers, num_epochs):
     forward_pass = create_qnn_XOR(n_layers, n_qubits)
     fp = 0
-    params = two_four
+    params = three_eight
     loss_history = []
     fp_history = []
+    acc_curve=[]
+
 
     def cost_fn(params, str, label):
         out = forward_pass(str, params)
@@ -37,7 +39,7 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_epochs):
         epoch_loss = 0
         correct_predictions = 0
         
-        for str, label in tqdm(zip(x_t, y_t), total=len(x_t), desc=f"Epoch {time_step+1}/{num_epochs}", leave=False):
+        for i, (str, label) in enumerate(tqdm(zip(x_t, y_t), total=len(x_t), desc=f"Epoch {time_step+1}/{num_epochs}", leave=False), start=1):
             # Compute loss with current parameters
             out = forward_pass(str, params)
             fp+=1
@@ -61,6 +63,23 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_epochs):
 
             # Update active params only
             params -= 0.01* gradients
+
+            if i % 80 == 0:
+                # Sample 100 random XOR points (fresh each time)
+                x_eval, y_eval = get_xor_data(n_qubits, 500)
+
+                # Forward passes only (no grads)
+                correct_eval = 0
+                for xe, ye in zip(x_eval, y_eval):
+                    out_eval = forward_pass(xe, params)
+                    pred_eval = pnp.argmax(out_eval)
+                    if int(pred_eval) == int(ye):
+                        correct_eval += 1
+                eval_acc = correct_eval / len(x_eval)
+                acc_curve.append((int(fp),eval_acc))
+                # eval_history.append((epoch, i, float(eval_acc)))
+                print(f"\nNo FP: {int(fp)}, Avg Accuracy: {eval_acc}")
+                print(acc_curve)
 
         # Decide what to freeze (mark as 0 for frozen, 1 for active)
         flat_grads = pnp.abs(sum_grads.flatten())
@@ -91,8 +110,8 @@ def train_qnn_param_shift(x, y, n_qubits, n_layers, num_epochs):
 
     
 # --------------------------------- Model Setup ---------------------------
-n_qubits = 4
-n_layers = 2
+n_qubits = 8
+n_layers = 3
 n_epochs = 400
 x,y = get_xor_data(n_qubits, 100000)
 
