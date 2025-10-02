@@ -21,14 +21,14 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 
 
-fourQ_data = [adam_4q_2l, wsbd_adam_4q_2l, sgd_4q_2l, wsbd_sgd_4q_2l]
-eightQ_data = [adam_8q_3l, wsbd_adam_8q_3l, sgd_8q_3l, wsbd_sgd_8q_3l]
-tenQ_data = [adam_10q_5l, wsbd_adam_10q_5l, sgd_10q_5l, wsbd_sgd_10q_5l]
+fourQ_data = [adam_4q_2l, sgd_4q_2l, wsbd_adam_4q_2l, wsbd_sgd_4q_2l]
+eightQ_data = [adam_8q_3l,sgd_8q_3l, wsbd_adam_8q_3l,  wsbd_sgd_8q_3l]
+tenQ_data = [adam_10q_5l,sgd_10q_5l, wsbd_adam_10q_5l,  wsbd_sgd_10q_5l]
 
-labels = ["Adam", "WSBD Adam", "SGD", "WSBD SGD"]
-colors = ['red', 'green', 'blue', 'orange']
+labels = ["Adam", "SGD","WSBD Adam", "WSBD SGD"]
+colors = ['green', 'blue', 'red', 'orange']
 titles = ["4 qubit 2 layers", "8 qubit 3 layers", "10 qubit 5 layers"]
-linestyles = ['--', '-', '--', '-']
+linestyles = ['--', '--', '-', '-']
 
 
 fig, axes = plt.subplots(1, 3, figsize=(12, 4))
