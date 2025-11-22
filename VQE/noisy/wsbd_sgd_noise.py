@@ -208,8 +208,8 @@ if __name__ == "__main__":
     # 4q 2l 
     # 4q 3l
     n_qubits = 4 #1,2,4 seems good
-    n_layers = 3 # 1,2,3,4,5,6?? Layers dont seem as impactful as the qubit count
-    num_epochs = 600
+    n_layers = 1 # 1,2,3,4,5,6?? Layers dont seem as impactful as the qubit count
+    num_epochs = 1000
 
     # Real IBM Data
     calib = {

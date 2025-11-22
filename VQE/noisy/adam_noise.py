@@ -192,8 +192,8 @@ def build_noise_from_calibration(n_qubits, calib):
 # ------------------------ Run ------------------------------------------------
 if __name__ == "__main__":
     n_qubits = 4
-    n_layers = 3
-    num_epochs = 400
+    n_layers = 1
+    num_epochs = 500
 
     # Example: populate with your real calibration data
     calib = {
