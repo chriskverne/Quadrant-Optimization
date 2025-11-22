@@ -221,8 +221,8 @@ def build_noise_from_calibration(n_qubits, calib):
 
 # ------------------------ Run ------------------------------------------------
 if __name__ == "__main__":
-    n_qubits = 4 #1,2,4 seems good
-    n_layers = 2 # 1,2,3,4,5,6?? Layers dont seem as impactful as the qubit count
+    n_qubits = 2 #1,2,4 seems good
+    n_layers = 4 # 1,2,3,4,5,6?? Layers dont seem as impactful as the qubit count
     num_epochs = 500
 
     # Real IBM Data

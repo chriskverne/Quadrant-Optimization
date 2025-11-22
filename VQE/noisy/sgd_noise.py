@@ -181,9 +181,9 @@ def build_noise_from_calibration(n_qubits, calib):
 
 # ------------------------ Run ------------------------------------------------
 if __name__ == "__main__":
-    n_qubits = 4
-    n_layers = 1
-    num_epochs = 500
+    n_qubits = 2
+    n_layers = 4
+    num_epochs = 315
 
     # Example: populate with your real calibration data
     calib = {
@@ -219,7 +219,7 @@ if __name__ == "__main__":
     # Include finite shots to add sampling noise
     params, history = train_vqe(
         n_qubits, n_layers, num_epochs,
-        noise_cfg=noise_cfg, shots=4000, lr=0.01
+        noise_cfg=noise_cfg, shots=1000, lr=0.01
     )
 
     print(history)

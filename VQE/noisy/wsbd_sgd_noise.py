@@ -145,7 +145,7 @@ def train_vqe(n_qubits, n_layers, num_epochs, noise_cfg=None, shots=2000,
     fp = 0
     active_p = pnp.ones_like(params)  # Initialize all as active
     sum_grads = pnp.zeros_like(params)
-    freeze_t = 0.50
+    freeze_t = 0.70
 
     loss_history = []
     grad_fn = qml.grad(lambda th: energy(th))
@@ -207,9 +207,9 @@ if __name__ == "__main__":
     # 4q 1l
     # 4q 2l 
     # 4q 3l
-    n_qubits = 4 #1,2,4 seems good
-    n_layers = 1 # 1,2,3,4,5,6?? Layers dont seem as impactful as the qubit count
-    num_epochs = 1000
+    n_qubits = 2 #1,2,4 seems good
+    n_layers = 4 # 1,2,3,4,5,6?? Layers dont seem as impactful as the qubit count
+    num_epochs = 600
 
     # Real IBM Data
     calib = {
