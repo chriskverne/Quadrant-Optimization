@@ -252,105 +252,292 @@ adam_1q_8l_runs = [adam_1q_8l, adam_1q_8l_r1, adam_1q_8l_r2, adam_1q_8l_r3, adam
 sgd_1q_8l_runs = [sgd_1q_8l, sgd_1q_8l_r1, sgd_1q_8l_r2, sgd_1q_8l_r3, sgd_1q_8l_r4]
 wsbd_sgd_1q_8l_runs = [wsbd_sgd_1q_8l, wsbd_sgd_1q_8l_r1, wsbd_sgd_1q_8l_r2, wsbd_sgd_1q_8l_r3, wsbd_sgd_1q_8l_r4]
 
+
+
+
+
+
+
+
+
+
+
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.ticker import FormatStrFormatter, FuncFormatter # Import new formatters
 
-# 1. Put your training run variables here
+# ---------------------------------------------------------
+# 1. CONFIGURATION
+# ---------------------------------------------------------
 
-# Setup the plot
-plt.figure(figsize=(10, 6))
+# Define the X-Limits dictionary
+xlim_map = {
+    '1 Qubit 2 Layers': 2000,
+    '1 Qubit 4 Layers': 6000,
+    '1 Qubit 8 Layers': 10000,#15000,
+    '2 Qubits 1 Layer': 3000,
+    '2 Qubits 2 Layers': 6000,
+    '2 Qubits 4 Layers': 7500, #10000
+    '4 Qubits 1 Layer': 8000,
+    '4 Qubits 2 Layers': 8000,
+    '4 Qubits 3 Layers': 14000 
+}
 
-def process_and_plot(run_list, label_name, color_code):
-    """
-    Helper function to truncate, calculate stats, and plot a specific group of runs.
-    """
-    # A. Find min length for this specific group
+# Define Ground State Energies
+gs_1q = -1
+gs_2q = -2.23606797749979
+gs_4q = -4.758770483143635
+
+# ---------------------------------------------------------
+# 2. HELPER FUNCTIONS
+# ---------------------------------------------------------
+
+def get_STD(run_list, label):
     min_len = min(len(r) for r in run_list)
-    
-    # B. Truncate runs to that length to ensure stacking works
     truncated = [np.array(r)[:min_len] for r in run_list]
+    data_stack = np.stack(truncated)
+    std_data = np.std(data_stack, axis=0)
+    std_energy = std_data[:, 1]
+    print(f"{label}: {np.mean(std_energy)}")
+
+def get_STD(run_list, label, gs_energy):
+    if not run_list:
+        print(f"{label}: No data")
+        return
+
+    # 1. Truncate runs to the same length to stack them
+    min_len = min(len(r) for r in run_list)
+    truncated = [np.array(r)[:min_len] for r in run_list]
+    data_stack = np.stack(truncated)
     
-    # C. Stack and Calculate Mean/Std
+    # 2. Calculate Standard Deviation across runs (axis 0)
+    std_data = np.std(data_stack, axis=0)
+    std_energy = std_data[:, 1] # Extract energy column
+    
+    # 3. Calculate Mean Standard Deviation
+    mean_std = np.mean(std_energy)
+    
+    # 4. Calculate Percentage (Coefficient of Variation)
+    # Formula: (Mean STD / |Target Energy|) * 100
+    percentage_std = (mean_std / abs(gs_energy)) * 100
+    
+    print(f"{label}: {mean_std:.5f} (+/- {percentage_std:.2f}%)")
+
+
+def process_and_plot(ax, run_list, label_name, color_code):
+    """
+    Plots runs on axis 'ax'. 
+    Applies '--' style if label is ADAM or SGD.
+    """
+    if not run_list:
+        return
+
+    # A. Standard Stats Calculation
+    min_len = min(len(r) for r in run_list)
+    truncated = [np.array(r)[:min_len] for r in run_list]
     data_stack = np.stack(truncated)
     mean_data = np.mean(data_stack, axis=0)
     std_data = np.std(data_stack, axis=0)
     
-    print(f'{label_name} Mean STD: {np.mean(std_data)}')
-    
-    # D. Extract X (FP) and Y (Energy)
     x_fp = mean_data[:, 0]
     mean_energy = mean_data[:, 1]
     std_energy = std_data[:, 1]
+    # print(f"{label_name}: {np.mean(std_energy)}")
     
-    # E. Plot Line
-    plt.plot(x_fp, mean_energy, label=label_name, color=color_code, linewidth=2)
+    # B. Determine Line Style
+    if label_name in ["ADAM", "SGD"]:
+        ls = '--'
+    else:
+        ls = '-' 
     
-    # F. Plot Deviation Shading
-    plt.fill_between(x_fp, 
-                     mean_energy - std_energy, 
-                     mean_energy + std_energy, 
-                     color=color_code, alpha=0.2)
+    # C. Plot
+    ax.plot(x_fp, mean_energy, label=label_name, color=color_code, linewidth=3, linestyle=ls)
+    ax.fill_between(x_fp, mean_energy - std_energy, mean_energy + std_energy, color=color_code, alpha=0.3)
 
-# --- Process and Plot All Groups ---
+def format_subplot(ax, title_key, gs_energy, show_legend=False):
+    """
+    Applies titles, limits, ground state lines, conditional legends,
+    and specific tick formatting (5 ticks, specific decimal precision).
+    """
+    # Basic Labels
+    ax.set_title(title_key)
+    ax.set_xlabel("Forward Passes")
+    
+    # Remove Grid
+    ax.grid(False)
+    
+    # --- 1. X-Axis Settings ---
+    if title_key in xlim_map:
+        xmax = xlim_map[title_key]
+        ax.set_xlim(0, xmax)
+        
+        # Generate exactly 5 evenly spaced ticks from 0 to xmax
+        xticks = np.linspace(0, xmax, 5)
+        ax.set_xticks(xticks)
+        
+        # Force Integer formatting (No decimals)
+        ax.xaxis.set_major_formatter(FuncFormatter(lambda x, _: f'{int(x)}'))
+        
+    # --- 2. Ground State Line ---
+    # Add this BEFORE setting Y-ticks so the limits account for this line if needed
+    ax.axhline(y=gs_energy, color='black', linestyle='--', linewidth=3, label='Ground State')
 
-# 4q 1l
-# process_and_plot(runs_wsbd, "WSBD Adam", "red")
-# process_and_plot(runs_adam, "ADAM", "green")
-# process_and_plot(sgd_runs, "SGD", "blue")
-# process_and_plot(wsbd_runs, "WSBD SGD", "orange")
+    # --- 3. Y-Axis Settings ---
+    # Get the current y-limits (which encompass the plotted data and GS line)
+    ymin, ymax = ax.get_ylim()
+    
+    # Generate exactly 5 evenly spaced ticks based on these limits
+    yticks = np.linspace(ymin, ymax, 5)
+    ax.set_yticks(yticks)
+    
+    # Force 1 decimal place formatting (e.g., 4.8 instead of 4.777)
+    ax.yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
 
-# 4q 2l
-# process_and_plot(wbsd_sgd_4q_2l_runs, "WSBD SGD", "orange")
-# process_and_plot(sgd_4q_2l_runs, "SGD", "blue")
-# process_and_plot(wbsd_adam_4q_2l_runs, "WSBD ADAM", "red")
-# process_and_plot(adam_4q_2l_runs, "ADAM", "green")
+    # Conditional Legend
+    if show_legend:
+        ax.legend(loc='upper right', frameon=True)
 
-# # 4q 3l
-# process_and_plot(wbsd_sgd_4q_3l_runs, "WSBD SGD", "orange")
-# process_and_plot(sgd_4q_3l_runs, "SGD", "blue")
-# process_and_plot(wbsd_adam_4q_3l_runs, "WSBD ADAM", "red")
-# process_and_plot(adam_4q_3l_runs, "ADAM", "green")
+# ---------------------------------------------------------
+# 3. PLOT FIGURE 1: 4 QUBITS
+# ---------------------------------------------------------
+fig1, axes1 = plt.subplots(1, 3, figsize=(14, 5))
+# fig1.suptitle("4 Qubit Comparison", fontsize=16)
 
-# # 2q 1l
-# process_and_plot(wsbd_sgd_2q_1l_runs, "WSBD SGD", "orange")
-# process_and_plot(sgd_2q_1l_runs, "SGD", "blue")
-# process_and_plot(wbsd_adam_2q_1l_runs, "WSBD ADAM", "red")
-# process_and_plot(adam_2q_1l_runs, "ADAM", "green")
+# --- 4Q 1 Layer (Show Legend) ---
+process_and_plot(axes1[0], wsbd_adam_4q_1l_runs, "WSBD Adam", "red")
+process_and_plot(axes1[0], adam_4q_1l_runs,      "ADAM",      "green")
+process_and_plot(axes1[0], sgd_4q_1l_runs,       "SGD",       "blue")
+process_and_plot(axes1[0], wsbd_sgd_4q_1l_runs,  "WSBD SGD",  "orange")
+format_subplot(axes1[0], "4 Qubits 1 Layer", gs_4q, show_legend=True)
 
-# 2q 2l
-# process_and_plot(wsbd_sgd_2q_2l_runs, "WSBD SGD", "orange")
-# process_and_plot(sgd_2q_2l_runs, "SGD", "blue")
-# process_and_plot(wbsd_adam_2q_2l_runs, "WSBD ADAM", "red")
-# process_and_plot(adam_2q_2l_runs, "ADAM", "green")
+# --- 4Q 2 Layers (No Legend) ---
+process_and_plot(axes1[1], wbsd_adam_4q_2l_runs, "WSBD Adam", "red")
+process_and_plot(axes1[1], adam_4q_2l_runs,      "ADAM",      "green")
+process_and_plot(axes1[1], sgd_4q_2l_runs,       "SGD",       "blue")
+process_and_plot(axes1[1], wbsd_sgd_4q_2l_runs,  "WSBD SGD",  "orange")
+format_subplot(axes1[1], "4 Qubits 2 Layers", gs_4q, show_legend=False)
 
-# 2q 4l
-# process_and_plot(wsbd_sgd_2q_4l_runs, "WSBD SGD", "orange")
-# process_and_plot(sgd_2q_4l_runs, "SGD", "blue")
-# process_and_plot(wsbd_adam_2q_4l_runs, "WSBD ADAM", "red")
-# process_and_plot(adam_2q_4l_runs, "ADAM", "green")
+# --- 4Q 3 Layers (No Legend) --- 
+# Note: Using 3 Layers here to match your xlim_map key
+process_and_plot(axes1[2], wbsd_adam_4q_3l_runs, "WSBD Adam", "red")
+process_and_plot(axes1[2], adam_4q_3l_runs,      "ADAM",      "green")
+process_and_plot(axes1[2], sgd_4q_3l_runs,       "SGD",       "blue")
+process_and_plot(axes1[2], wbsd_sgd_4q_3l_runs,  "WSBD SGD",  "orange")
+format_subplot(axes1[2], "4 Qubits 3 Layers", gs_4q, show_legend=False)
 
-# 1q 2l
-# process_and_plot(wsbd_sgd_1q_2l_runs, "WSBD SGD", "orange")
-# process_and_plot(sgd_1q_2l_runs, "SGD", "blue")
-# process_and_plot(wsbd_adam_1q_2l_runs, "WSBD ADAM", "red")
-# process_and_plot(adam_1q_2l_runs, "ADAM", "green")
+plt.tight_layout()
+# plt.show()
 
-# 1q 4l
-# process_and_plot(wsbd_sgd_1q_4l_runs, "WSBD SGD", "orange")
-# process_and_plot(sgd_1q_4l_runs, "SGD", "blue")
-# process_and_plot(wsbd_adam_1q_4l_runs, "WSBD ADAM", "red")
-# process_and_plot(adam_1q_4l_runs, "ADAM", "green")
 
-# 1q 8l
-# process_and_plot(wsbd_sgd_1q_8l_runs, "WSBD SGD", "orange")
-# process_and_plot(sgd_1q_8l_runs, "SGD", "blue")
-# process_and_plot(wsbd_adam_1q_8l_runs, "WSBD ADAM", "red")
-# process_and_plot(adam_1q_8l_runs, "ADAM", "green")
+# ---------------------------------------------------------
+# 4. PLOT FIGURE 2: 2 QUBITS
+# ---------------------------------------------------------
+fig2, axes2 = plt.subplots(1, 3, figsize=(14, 5))
+# fig2.suptitle("2 Qubit Comparison", fontsize=16)
 
-# --- Final Formatting ---
-plt.title("Mean Energy vs FP Comparison")
-plt.xlabel("FP")
-plt.ylabel("Energy")
-plt.legend()
-plt.grid(True, alpha=0.3)
-plt.show()
+# --- 2Q 1 Layer (Show Legend) ---
+process_and_plot(axes2[0], wbsd_adam_2q_1l_runs, "WSBD Adam", "red")
+process_and_plot(axes2[0], adam_2q_1l_runs,      "ADAM",      "green")
+process_and_plot(axes2[0], sgd_2q_1l_runs,       "SGD",       "blue")
+process_and_plot(axes2[0], wsbd_sgd_2q_1l_runs,  "WSBD SGD",  "orange")
+format_subplot(axes2[0], "2 Qubits 1 Layer", gs_2q, show_legend=True)
+
+# --- 2Q 2 Layers (No Legend) ---
+process_and_plot(axes2[1], wbsd_adam_2q_2l_runs, "WSBD Adam", "red")
+process_and_plot(axes2[1], adam_2q_2l_runs,      "ADAM",      "green")
+process_and_plot(axes2[1], sgd_2q_2l_runs,       "SGD",       "blue")
+process_and_plot(axes2[1], wsbd_sgd_2q_2l_runs,  "WSBD SGD",  "orange")
+format_subplot(axes2[1], "2 Qubits 2 Layers", gs_2q, show_legend=False)
+
+# --- 2Q 4 Layers (No Legend) ---
+process_and_plot(axes2[2], wsbd_adam_2q_4l_runs, "WSBD Adam", "red")
+process_and_plot(axes2[2], adam_2q_4l_runs,      "ADAM",      "green")
+process_and_plot(axes2[2], sgd_2q_4l_runs,       "SGD",       "blue")
+process_and_plot(axes2[2], wsbd_sgd_2q_4l_runs,  "WSBD SGD",  "orange")
+format_subplot(axes2[2], "2 Qubits 4 Layers", gs_2q, show_legend=False)
+
+plt.tight_layout()
+# plt.show()
+
+
+# ---------------------------------------------------------
+# 5. PLOT FIGURE 3: 1 QUBIT
+# ---------------------------------------------------------
+fig3, axes3 = plt.subplots(1, 3, figsize=(14, 5))
+# fig3.suptitle("1 Qubit Comparison", fontsize=16)
+
+# --- 1Q 2 Layers (Show Legend) ---
+process_and_plot(axes3[0], wsbd_adam_1q_2l_runs, "WSBD Adam", "red")
+process_and_plot(axes3[0], adam_1q_2l_runs,      "ADAM",      "green")
+process_and_plot(axes3[0], sgd_1q_2l_runs,       "SGD",       "blue")
+process_and_plot(axes3[0], wsbd_sgd_1q_2l_runs,  "WSBD SGD",  "orange")
+format_subplot(axes3[0], "1 Qubit 2 Layers", gs_1q, show_legend=True)
+
+# --- 1Q 4 Layers (No Legend) ---
+process_and_plot(axes3[1], wsbd_adam_1q_4l_runs, "WSBD Adam", "red")
+process_and_plot(axes3[1], adam_1q_4l_runs,      "ADAM",      "green")
+process_and_plot(axes3[1], sgd_1q_4l_runs,       "SGD",       "blue")
+process_and_plot(axes3[1], wsbd_sgd_1q_4l_runs,  "WSBD SGD",  "orange")
+format_subplot(axes3[1], "1 Qubit 4 Layers", gs_1q, show_legend=False)
+
+# --- 1Q 8 Layers (No Legend) ---
+process_and_plot(axes3[2], wsbd_adam_1q_8l_runs, "WSBD Adam", "red")
+process_and_plot(axes3[2], adam_1q_8l_runs,      "ADAM",      "green")
+process_and_plot(axes3[2], sgd_1q_8l_runs,       "SGD",       "blue")
+process_and_plot(axes3[2], wsbd_sgd_1q_8l_runs,  "WSBD SGD",  "orange")
+format_subplot(axes3[2], "1 Qubit 8 Layers", gs_1q, show_legend=False)
+
+plt.tight_layout()
+# plt.show()
+
+
+# STD:
+# -------- 4 QUBITS --------
+get_STD(wsbd_adam_4q_1l_runs, "WSBD Adam 4Q 1L", gs_4q)
+get_STD(adam_4q_1l_runs,      "Adam 4Q 1L", gs_4q)
+get_STD(sgd_4q_1l_runs,       "SGD 4Q 1L", gs_4q)
+get_STD(wsbd_sgd_4q_1l_runs,  "WSBD SGD 4Q 1L", gs_4q)
+
+get_STD(wbsd_adam_4q_2l_runs, "WSBD Adam 4Q 2L", gs_4q)
+get_STD(adam_4q_2l_runs,      "Adam 4Q 2L", gs_4q)
+get_STD(sgd_4q_2l_runs,       "SGD 4Q 2L", gs_4q)
+get_STD(wbsd_sgd_4q_2l_runs,  "WSBD SGD 4Q 2L", gs_4q)
+
+get_STD(wbsd_adam_4q_3l_runs, "WSBD Adam 4Q 3L", gs_4q)
+get_STD(adam_4q_3l_runs,      "Adam 4Q 3L", gs_4q)
+get_STD(sgd_4q_3l_runs,       "SGD 4Q 3L", gs_4q)
+get_STD(wbsd_sgd_4q_3l_runs,  "WSBD SGD 4Q 3L", gs_4q)
+
+
+# -------- 2 QUBITS --------
+get_STD(wbsd_adam_2q_1l_runs, "WSBD Adam 2Q 1L", gs_2q)
+get_STD(adam_2q_1l_runs,      "Adam 2Q 1L", gs_2q)
+get_STD(sgd_2q_1l_runs,       "SGD 2Q 1L", gs_2q)
+get_STD(wsbd_sgd_2q_1l_runs,  "WSBD SGD 2Q 1L", gs_2q)
+
+get_STD(wbsd_adam_2q_2l_runs, "WSBD Adam 2Q 2L", gs_2q)
+get_STD(adam_2q_2l_runs,      "Adam 2Q 2L", gs_2q)
+get_STD(sgd_2q_2l_runs,       "SGD 2Q 2L", gs_2q)
+get_STD(wsbd_sgd_2q_2l_runs,  "WSBD SGD 2Q 2L", gs_2q)
+
+get_STD(wsbd_adam_2q_4l_runs, "WSBD Adam 2Q 4L", gs_2q)
+get_STD(adam_2q_4l_runs,      "Adam 2Q 4L", gs_2q)
+get_STD(sgd_2q_4l_runs,       "SGD 2Q 4L", gs_2q)
+get_STD(wsbd_sgd_2q_4l_runs,  "WSBD SGD 2Q 4L", gs_2q)
+
+
+# -------- 1 QUBIT --------
+get_STD(wsbd_adam_1q_2l_runs, "WSBD Adam 1Q 2L", gs_1q)
+get_STD(adam_1q_2l_runs,      "Adam 1Q 2L", gs_1q)
+get_STD(sgd_1q_2l_runs,       "SGD 1Q 2L", gs_1q)
+get_STD(wsbd_sgd_1q_2l_runs,  "WSBD SGD 1Q 2L", gs_1q)
+
+get_STD(wsbd_adam_1q_4l_runs, "WSBD Adam 1Q 4L", gs_1q)
+get_STD(adam_1q_4l_runs,      "Adam 1Q 4L", gs_1q)
+get_STD(sgd_1q_4l_runs,       "SGD 1Q 4L", gs_1q)
+get_STD(wsbd_sgd_1q_4l_runs,  "WSBD SGD 1Q 4L", gs_1q)
+
+get_STD(wsbd_adam_1q_8l_runs, "WSBD Adam 1Q 8L", gs_1q)
+get_STD(adam_1q_8l_runs,      "Adam 1Q 8L", gs_1q)
+get_STD(sgd_1q_8l_runs,       "SGD 1Q 8L", gs_1q)
+get_STD(wsbd_sgd_1q_8l_runs,  "WSBD SGD 1Q 8L", gs_1q)
