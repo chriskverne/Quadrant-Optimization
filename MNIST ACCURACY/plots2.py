@@ -22,7 +22,7 @@ def compute_STD(run_list, label_name):
     # E. Coefficient of Variation (CV = std / mean * 100)
     cv = (mean_std / mean_mean) * 100 if mean_mean != 0 else float('inf')
 
-    print(f"{label_name} STD: {mean_std:.4f}, CV: {cv:.5f}%")
+    print(f"{label_name} STD: {mean_std:.4f}, CV: {cv:.9f}%")
 
 
 
@@ -143,7 +143,7 @@ for ax, dataset, title in zip(axes, [fourQ_data, eightQ_data, tenQ_data], titles
     ax.set_ylabel("Accuracy", fontsize=12)
 
 plt.tight_layout()
-# plt.show()
+plt.show()
 
 
 # for dataset, title in zip([fourQ_data, eightQ_data, tenQ_data], titles):

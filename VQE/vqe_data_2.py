@@ -426,7 +426,7 @@ process_and_plot(axes1[2], wbsd_sgd_4q_3l_runs,  "WSBD SGD",  "orange")
 format_subplot(axes1[2], "4 Qubits 3 Layers", gs_4q, show_legend=False)
 
 plt.tight_layout()
-# plt.show()
+plt.show()
 
 
 # ---------------------------------------------------------
@@ -457,7 +457,7 @@ process_and_plot(axes2[2], wsbd_sgd_2q_4l_runs,  "WSBD SGD",  "orange")
 format_subplot(axes2[2], "2 Qubits 4 Layers", gs_2q, show_legend=False)
 
 plt.tight_layout()
-# plt.show()
+plt.show()
 
 
 # ---------------------------------------------------------
@@ -488,7 +488,7 @@ process_and_plot(axes3[2], wsbd_sgd_1q_8l_runs,  "WSBD SGD",  "orange")
 format_subplot(axes3[2], "1 Qubit 8 Layers", gs_1q, show_legend=False)
 
 plt.tight_layout()
-# plt.show()
+plt.show()
 
 
 # STD:
