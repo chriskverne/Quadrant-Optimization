@@ -360,8 +360,8 @@ def format_subplot(ax, title_key, gs_energy, show_legend=False):
     and specific tick formatting (5 ticks, specific decimal precision).
     """
     # Basic Labels
-    ax.set_title(title_key)
-    ax.set_xlabel("Forward Passes")
+    ax.set_title(title_key, fontsize=14)
+    ax.set_xlabel("Forward Passes", fontsize=14)
     
     # Remove Grid
     ax.grid(False)
@@ -392,6 +392,8 @@ def format_subplot(ax, title_key, gs_energy, show_legend=False):
     
     # Force 1 decimal place formatting (e.g., 4.8 instead of 4.777)
     ax.yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
+
+    ax.tick_params(axis='both', which='major', labelsize=14, length=6, width=2)
 
     # Conditional Legend
     if show_legend:
