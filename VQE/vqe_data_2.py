@@ -354,7 +354,7 @@ def process_and_plot(ax, run_list, label_name, color_code):
     ax.plot(x_fp, mean_energy, label=label_name, color=color_code, linewidth=3, linestyle=ls)
     ax.fill_between(x_fp, mean_energy - std_energy, mean_energy + std_energy, color=color_code, alpha=0.3)
 
-def format_subplot(ax, title_key, gs_energy, show_legend=False):
+def format_subplot(ax, title_key, gs_energy, show_legend=False, show_energy=True):
     """
     Applies titles, limits, ground state lines, conditional legends,
     and specific tick formatting (5 ticks, specific decimal precision).
@@ -362,6 +362,8 @@ def format_subplot(ax, title_key, gs_energy, show_legend=False):
     # Basic Labels
     ax.set_title(title_key, fontsize=14)
     ax.set_xlabel("Forward Passes", fontsize=14)
+    if show_energy:
+        ax.set_ylabel("Energy", fontsize=14)
     
     # Remove Grid
     ax.grid(False)
