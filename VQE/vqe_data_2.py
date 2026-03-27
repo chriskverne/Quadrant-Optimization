@@ -436,7 +436,7 @@ plt.show()
 # ---------------------------------------------------------
 # 4. PLOT FIGURE 2: 2 QUBITS
 # ---------------------------------------------------------
-fig2, axes2 = plt.subplots(1, 3, figsize=(14, 5))
+fig2, axes2 = plt.subplots(1, 3, figsize=(14, 3))
 # fig2.suptitle("2 Qubit Comparison", fontsize=16)
 
 # --- 2Q 1 Layer (Show Legend) ---

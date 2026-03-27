@@ -213,8 +213,8 @@ plt.xlim(0, 200000)
 # plt.xlim(0, 200000)
 
 
-plt.xlabel('Number of Forward Passes', fontsize='13')
-plt.ylabel('Cross Entropy Loss', fontsize='13')
+# plt.xlabel('Number of Forward Passes', fontsize='13')
+plt.ylabel('Cross Entropy Loss', fontsize='16')
 plt.gca().set_facecolor("#e2ddddaf")
 plt.tick_params(axis='both', which='major', labelsize=12)  # Change 14 to your desired size
 plt.minorticks_on()
