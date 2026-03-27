@@ -404,7 +404,7 @@ def format_subplot(ax, title_key, gs_energy, show_legend=False, show_energy=True
 # ---------------------------------------------------------
 # 3. PLOT FIGURE 1: 4 QUBITS
 # ---------------------------------------------------------
-fig1, axes1 = plt.subplots(1, 3, figsize=(14, 5))
+fig1, axes1 = plt.subplots(1, 3, figsize=(14, 3))
 # fig1.suptitle("4 Qubit Comparison", fontsize=16)
 
 # --- 4Q 1 Layer (Show Legend) ---

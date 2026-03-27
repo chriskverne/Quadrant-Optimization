@@ -113,7 +113,7 @@ titles = ["4 qubit 2 layers", "8 qubit 3 layers", "10 qubit 5 layers"]
 linestyles = ['--', '--', '-', '-']
 colors = ['green', 'blue', 'red', 'orange']
 
-fig, axes = plt.subplots(1, 3, figsize=(12, 4))
+fig, axes = plt.subplots(1, 3, figsize=(12, 3))
 for ax in axes.ravel():
     ax.set_facecolor("#e2ddddaf")
 for ax, dataset, title in zip(axes, [fourQ_data, eightQ_data, tenQ_data], titles):
@@ -129,12 +129,12 @@ for ax, dataset, title in zip(axes, [fourQ_data, eightQ_data, tenQ_data], titles
         y_trimmed = y[:max_idx+1]
 
         ax.plot(x_trimmed, y_trimmed, label=f'{label}', linewidth=3, color=color, linestyle=linestyle)
-        ax.legend(
-            loc='lower right',
-            framealpha=1,
-            facecolor='white',
-            edgecolor='black'
-        )
+        # ax.legend(
+        #     loc='lower right',
+        #     framealpha=1,
+        #     facecolor='white',
+        #     edgecolor='black'
+        # )
     ax.xaxis.set_major_locator(MaxNLocator(nbins=5, integer=True))
     ax.yaxis.set_major_locator(MaxNLocator(nbins=5, prune=None)) 
     ax.tick_params(axis='both', labelsize=12)
