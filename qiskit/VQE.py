@@ -1,3 +1,21 @@
+"""Variational Quantum Eigensolver (Qiskit) benchmark for WSBD.
+
+TFIM/XXZ Hamiltonian builders, a hardware-efficient ansatz, and a
+parameter-shift training loop.
+
+Copyright (c) 2025-2026 Christopher Kverne
+SPDX-License-Identifier: MIT
+Source: https://github.com/chriskverne/Quadrant-Optimization
+
+Original work; not adapted from any third-party tutorial or benchmark
+implementation, and carrying no separate third-party notices.
+
+If you use this code in published work, please cite:
+  C. Kverne, M. Akewar, Y. Huo, T. Patel, and J. Bhimani. "WSBD:
+  Freezing-Based Optimizer for Quantum Neural Networks." AISTATS, 2026.
+  arXiv:2602.11383.
+"""
+
 import numpy as np
 from dataclasses import dataclass
 

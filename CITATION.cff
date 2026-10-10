@@ -1,0 +1,36 @@
+cff-version: 1.2.0
+message: >-
+  If you use this software, or any excerpt or adaptation of it, please cite
+  both the software (this repository) and the WSBD paper listed under
+  preferred-citation.
+title: "Quadrant-Optimization: reference implementation of WSBD (Weighted Stochastic Block Descent)"
+abstract: >-
+  Research code for WSBD, a freezing-based optimizer for quantum neural
+  networks, including PennyLane and Qiskit implementations and the VQE,
+  MNIST, Fashion-MNIST, Parity and XOR benchmarks reported in the paper.
+type: software
+authors:
+  - family-names: Kverne
+    given-names: Christopher
+repository-code: "https://github.com/chriskverne/Quadrant-Optimization"
+license: MIT
+preferred-citation:
+  type: conference-paper
+  title: "WSBD: Freezing-Based Optimizer for Quantum Neural Networks"
+  authors:
+    - family-names: Kverne
+      given-names: Christopher
+    - family-names: Akewar
+      given-names: Mayur
+    - family-names: Huo
+      given-names: Yuqian
+    - family-names: Patel
+      given-names: Tirthak
+    - family-names: Bhimani
+      given-names: Janki
+  collection-title: >-
+    Proceedings of the International Conference on Artificial Intelligence and
+    Statistics (AISTATS)
+  year: 2026
+  url: "https://arxiv.org/abs/2602.11383"
+  notes: "arXiv:2602.11383"
